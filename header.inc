@@ -1,0 +1,70 @@
+<?php
+require_once 'config.inc';
+?>
+<header class="mc-header">
+  <div class="mc-header-left">
+    <a href="index.php" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+      <span class="mc-logo-svg" aria-label="로고">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 13L14 5L24 13" stroke="#0064FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <rect x="8.5" y="13" width="11" height="8" rx="2" fill="#90caf9" stroke="#0064FF" stroke-width="2"/>
+        </svg>
+      </span>
+      <span class="mc-header-title"><?php echo SITE_TITLE; ?></span>
+    </a>
+  </div>
+  <button class="mc-hamburger" id="mc-hamburger-btn" aria-label="메뉴 열기" aria-controls="mc-mobile-menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="mc-header-menu" id="mc-header-menu">
+    <?php if ($isLoggedIn): ?>
+      <?php if ($_SESSION['role'] === 'admin'): ?>
+        <a href="admin.php" class="mc-login-link">관리자</a>
+        <a href="user_activities.php" class="mc-login-link">활동기록</a>
+        <a href="develop.php" class="mc-login-link">개발도구</a>
+        <a href="logout.php" class="mc-login-link">로그아웃</a>
+      <?php else: ?>
+        <a href="properties.php" class="mc-login-link">내 임대물</a>
+        <a href="logout.php" class="mc-login-link">로그아웃</a>
+      <?php endif; ?>
+    <?php else: ?>
+      <a href="login.php" class="mc-login-link">로그인</a>
+    <?php endif; ?>
+  </nav>
+  <nav class="mc-mobile-menu" id="mc-mobile-menu" style="display:none;">
+    <?php if ($isLoggedIn): ?>
+      <?php if ($_SESSION['role'] === 'admin'): ?>
+        <a href="admin.php" class="mc-login-link">관리자</a>
+        <a href="user_activities.php" class="mc-login-link">활동기록</a>
+        <a href="develop.php" class="mc-login-link">개발도구</a>
+        <a href="logout.php" class="mc-login-link">로그아웃</a>
+      <?php else: ?>
+        <a href="properties.php" class="mc-login-link">내 임대물</a>
+        <a href="logout.php" class="mc-login-link">로그아웃</a>
+      <?php endif; ?>
+    <?php else: ?>
+      <a href="login.php" class="mc-login-link">로그인</a>
+    <?php endif; ?>
+  </nav>
+</header>
+<script>
+// 햄버거 메뉴 토글
+const hamburgerBtn = document.getElementById('mc-hamburger-btn');
+const mobileMenu = document.getElementById('mc-mobile-menu');
+if (hamburgerBtn && mobileMenu) {
+  hamburgerBtn.addEventListener('click', function() {
+    const expanded = hamburgerBtn.getAttribute('aria-expanded') === 'true';
+    hamburgerBtn.setAttribute('aria-expanded', !expanded);
+    mobileMenu.style.display = expanded ? 'none' : 'flex';
+    document.body.classList.toggle('mc-mobile-menu-open', !expanded);
+  });
+  // 메뉴 클릭 시 닫기
+  mobileMenu.querySelectorAll('a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      mobileMenu.style.display = 'none';
+      hamburgerBtn.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('mc-mobile-menu-open');
+    });
+  });
+}
+</script> 

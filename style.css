@@ -1,0 +1,538 @@
+/* 무빙체크(MovingCheck) 메인 테마 CSS */
+
+body {
+    background: #f9fbfc;
+    font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', Arial, sans-serif;
+    color: #222;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.main-title {
+    font-size: 2.7rem;
+    font-weight: 800;
+    color: #1565c0;
+    margin-top: 2.5rem;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 1.15rem;
+    color: #4a6fa1;
+    margin-bottom: 2.2rem;
+    font-weight: 500;
+}
+
+.container {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(21,101,192,0.07), 0 1.5px 4px rgba(0,0,0,0.03);
+    padding: 2.5rem 2rem 2rem 2rem;
+    margin-top: 2.5rem;
+    max-width: 650px;
+}
+
+.feature-list {
+    margin-top: 2.2rem;
+    padding-left: 1.2rem;
+}
+
+.feature-list li {
+    margin-bottom: 1.1rem;
+    font-size: 1.08rem;
+    line-height: 1.7;
+    color: #2d3a4a;
+    position: relative;
+    padding-left: 1.2rem;
+}
+
+.feature-list li::before {
+    content: '\2714';
+    color: #1976d2;
+    position: absolute;
+    left: 0;
+    font-size: 1.1rem;
+    top: 0.1rem;
+}
+
+.login-btn {
+    margin-top: 2.5rem;
+    background: linear-gradient(90deg, #ffea00 0%, #ffe082 100%);
+    color: #222;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 0.9rem 2.5rem;
+    font-size: 1.15rem;
+    box-shadow: 0 2px 8px rgba(255,234,0,0.08);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.login-btn:hover {
+    background: linear-gradient(90deg, #ffe082 0%, #ffea00 100%);
+    color: #0d47a1;
+    box-shadow: 0 4px 16px rgba(255,234,0,0.15);
+}
+
+img.img-fluid {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(21,101,192,0.08);
+    margin-bottom: 1.5rem;
+}
+
+.footer {
+    margin-top: 3.5rem;
+    color: #7b8ca6;
+    font-size: 0.98rem;
+    border-top: 1px solid #e3eaf2;
+    padding: 1.2rem 0;
+    background: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 1.2rem 0.5rem 1.5rem 0.5rem;
+        margin-top: 1.2rem;
+    }
+    .main-title {
+        font-size: 2rem;
+    }
+    .subtitle {
+        font-size: 1rem;
+    }
+    .feature-list li {
+        font-size: 0.98rem;
+    }
+    .login-btn {
+        font-size: 1rem;
+        padding: 0.7rem 1.5rem;
+    }
+}
+
+/* 기본값: relative */
+.mc-header {
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 54px;
+    padding: 0 1.2rem;
+    background: rgba(255,255,255,0.7);
+    box-shadow: none;
+    border-bottom: none;
+    backdrop-filter: blur(8px);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* index.php(메인)에서만 fixed */
+body.main-home .mc-header {
+    position: fixed;
+}
+
+.mc-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.mc-logo-svg {
+    display: flex;
+    align-items: center;
+}
+.mc-header-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0064FF;
+    letter-spacing: -0.5px;
+}
+.mc-header-menu {
+    font-size: 1.05rem;
+    color: #888;
+    font-weight: 500;
+    margin-left: auto;
+    padding-left: 1rem;
+}
+.mc-menu-placeholder {
+    opacity: 0.7;
+}
+
+.hero {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('images/dslrcam2.png') center center/cover no-repeat;
+    z-index: 1;
+}
+.hero-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    color: #fff;
+    margin-top: 60px;
+    width: 100%;
+}
+.hero-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 2.2rem;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.18), 0 1px 2px rgba(0,0,0,0.12);
+}
+.mc-btn-main {
+    display: inline-block;
+    background: #0064FF;
+    color: #fff;
+    font-size: 1.08rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 999px;
+    padding: 0.95rem 2.2rem;
+    margin-bottom: 1.5rem;
+    text-decoration: none;
+    box-shadow: none;
+    transition: background 0.2s;
+}
+.mc-btn-main:hover {
+    background: #0052cc;
+}
+.scroll-down-arrow {
+    position: absolute;
+    left: 50%;
+    bottom: 32px;
+    transform: translateX(-50%);
+    opacity: 0.5;
+    z-index: 4;
+    animation: arrow-blink 1.5s infinite;
+}
+@keyframes arrow-blink {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.features {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.feature-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    width: 100%;
+}
+.feature-desc {
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+}
+.feature-bg1 { background: #f7fafd; }
+.feature-bg2 { background: #f4f6fa; }
+.feature-bg3 { background: #fff; }
+
+.feature-photo-record {
+    background: url('images/beforeafter.png') center center/cover no-repeat;
+    position: relative;
+}
+
+.feature-photo-record::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.feature-photo-record .feature-desc {
+    position: relative;
+    z-index: 2;
+}
+
+.feature-photo-record h2 {
+    color: #0064FF;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.feature-photo-record p {
+    color: #333;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    margin: 0 2rem;
+}
+
+@media (max-width: 600px) {
+    .feature-photo-record p {
+        margin: 0 1.5rem;
+    }
+}
+
+.feature-img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 16px;
+    margin-right: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.mc-main {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 2.5rem 1.2rem 1.5rem 1.2rem;
+    text-align: center;
+}
+
+.mc-title {
+    font-size: 2.1rem;
+    font-weight: 900;
+    margin-bottom: 1.1rem;
+    color: #222;
+    letter-spacing: -1px;
+}
+
+.mc-blue {
+    color: #0064FF;
+}
+
+.mc-desc {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 2.2rem;
+    line-height: 1.6;
+}
+
+.mc-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    justify-content: center;
+    margin-top: 2.5rem;
+}
+
+.mc-feature-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(0,100,255,0.04);
+    padding: 1.3rem 1.1rem 1.1rem 1.1rem;
+    width: 150px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.mc-feature-icon {
+    font-size: 2.1rem;
+    margin-bottom: 0.7rem;
+}
+
+.mc-feature-title {
+    font-size: 1.08rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    color: #0064FF;
+}
+
+.mc-feature-desc {
+    font-size: 0.98rem;
+    color: #444;
+    line-height: 1.5;
+}
+
+.mc-footer {
+    width: 100%;
+    text-align: center;
+    color: #888;
+    font-size: 0.98rem;
+    background: #f4f6fa;
+    padding: 2.2rem 0 1.2rem 0;
+    margin-top: 3rem;
+    border-top: 1px solid #f0f2f5;
+}
+
+@media (max-width: 600px) {
+    .mc-main {
+        padding: 1.2rem 0.3rem 1.2rem 0.3rem;
+    }
+    .mc-features {
+        flex-direction: column;
+        gap: 0.8rem;
+        align-items: center;
+    }
+    .mc-feature-card {
+        width: 90%;
+        min-width: 0;
+    }
+    .mc-title {
+        font-size: 1.4rem;
+    }
+}
+
+.mc-main-photo {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 16px;
+    margin: 1.5rem auto 1rem auto;
+    display: block;
+    box-shadow: 0 2px 8px rgba(0,100,255,0.06);
+}
+
+@media (max-width: 600px) {
+    .mc-main-photo {
+        max-width: 95vw;
+    }
+}
+
+.hero-top-gradient {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 180px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.13) 0%, rgba(0,0,0,0.03) 100%);
+    z-index: 3;
+    pointer-events: none;
+}
+.hero .mc-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    background: transparent;
+    box-shadow: none;
+    border-bottom: none;
+    z-index: 4;
+}
+
+.mc-login-link {
+    font-size: 1rem;
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 0.5rem;
+    padding: 0.2rem 0.8rem;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+.mc-login-link:hover {
+    background: #e3f2fd;
+    color: #0d47a1;
+    text-decoration: none;
+}
+
+/* 햄버거 메뉴 및 모바일 메뉴 */
+.mc-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 38px;
+  height: 38px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 0.2rem;
+  z-index: 1002;
+  position: relative;
+}
+.mc-hamburger span {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background: #1976d2;
+  margin: 4px 0;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.mc-mobile-menu {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  z-index: 1001;
+  padding: 70px 0 1.5rem 0;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  text-align: center;
+  gap: 0.5rem;
+}
+.mc-mobile-menu .mc-login-link {
+  font-size: 1.15rem;
+  color: #1976d2;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid #f0f2f5;
+  margin: 0 1.5rem;
+  border-radius: 0;
+  display: block;
+}
+.mc-mobile-menu .mc-login-link:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 800px) {
+  .mc-header {
+    padding: 0 0.5rem;
+    justify-content: space-between;
+  }
+  .mc-header-left {
+    flex: 1 1 auto;
+  }
+  .mc-hamburger {
+    display: flex !important;
+  }
+  .mc-header-menu {
+    display: none !important;
+  }
+  .mc-mobile-menu {
+    display: none;
+  }
+  body.mc-mobile-menu-open .mc-mobile-menu {
+    display: flex !important;
+  }
+}
+@media (min-width: 801px) {
+  .mc-hamburger {
+    display: none !important;
+  }
+  .mc-header-menu {
+    display: flex !important;
+    gap: 0.5rem;
+  }
+  .mc-mobile-menu {
+    display: none !important;
+  }
+} 
