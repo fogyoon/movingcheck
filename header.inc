@@ -5,12 +5,9 @@ require_once 'config.inc';
   <div class="mc-header-left">
     <a href="index.php" style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
       <span class="mc-logo-svg" aria-label="로고">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 13L14 5L24 13" stroke="#0064FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <rect x="8.5" y="13" width="11" height="8" rx="2" fill="#90caf9" stroke="#0064FF" stroke-width="2"/>
-        </svg>
+        <img src="mc_logo.svg" alt="로고" width="120" height="120" style="display: block;" />
       </span>
-      <span class="mc-header-title"><?php echo SITE_TITLE; ?></span>
+      <!--<span class="mc-header-title"><?php echo SITE_TITLE; ?></span>-->
     </a>
   </div>
   <button class="mc-hamburger" id="mc-hamburger-btn" aria-label="메뉴 열기" aria-controls="mc-mobile-menu" aria-expanded="false">

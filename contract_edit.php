@@ -22,13 +22,9 @@ $pdo = get_pdo();
 $contract = null;
 if ($contract_id) {
     $stmt = $pdo->prepare("
-        SELECT c.*, p.address, p.detail_address,
-               l.nickname as landlord_name,
-               t.nickname as tenant_name
+        SELECT c.*, p.address, p.detail_address
         FROM contracts c 
         JOIN properties p ON c.property_id = p.id 
-        LEFT JOIN users l ON c.landlord_id = l.id
-        LEFT JOIN users t ON c.tenant_id = t.id
         WHERE c.id = ? AND p.created_by = ?
     ");
     $stmt->execute([$contract_id, $user_id]);
@@ -57,15 +53,25 @@ $stmt->execute();
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 현재 사용자 정보 조회
-$stmt = $pdo->prepare("SELECT id, nickname, role FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT id, nickname, role, phone FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// 임대인/중개사 전화번호 자동 입력용 변수
+$auto_landlord_phone = '';
+$auto_agent_phone = '';
+if ($current_user['role'] === 'landlord' && !empty($current_user['phone'])) {
+    $auto_landlord_phone = $current_user['phone'];
+}
+if ($current_user['role'] === 'agent' && !empty($current_user['phone'])) {
+    $auto_agent_phone = $current_user['phone'];
+}
 
 // 폼 제출 처리
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $landlord_name = trim($_POST['landlord_name'] ?? '');
     $tenant_name = trim($_POST['tenant_name'] ?? '');
-    $agent_id = (int)($_POST['agent_id'] ?? 0);
+    $agent_name = trim($_POST['agent_name'] ?? '');
     $landlord_phone = trim($_POST['landlord_phone'] ?? '');
     $tenant_phone = trim($_POST['tenant_phone'] ?? '');
     $agent_phone = trim($_POST['agent_phone'] ?? '');
@@ -134,49 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
-        // 임대인과 임차인을 users 테이블에 추가하거나 기존 사용자 찾기
-        $landlord_id = null;
-        $tenant_id = null;
-        
-        // 임대인 처리
-        if ($landlord_name) {
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE nickname = ? AND role = 'landlord'");
-            $stmt->execute([$landlord_name]);
-            $existing_landlord = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($existing_landlord) {
-                $landlord_id = $existing_landlord['id'];
-            } else {
-                // 새 임대인 추가
-                $stmt = $pdo->prepare("INSERT INTO users (nickname, role, login_by) VALUES (?, 'landlord', 'manual')");
-                $stmt->execute([$landlord_name]);
-                $landlord_id = $pdo->lastInsertId();
-            }
-        }
-        
-        // 임차인 처리
-        if ($tenant_name) {
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE nickname = ? AND role = 'tenant'");
-            $stmt->execute([$tenant_name]);
-            $existing_tenant = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($existing_tenant) {
-                $tenant_id = $existing_tenant['id'];
-            } else {
-                // 새 임차인 추가
-                $stmt = $pdo->prepare("INSERT INTO users (nickname, role, login_by) VALUES (?, 'tenant', 'manual')");
-                $stmt->execute([$tenant_name]);
-                $tenant_id = $pdo->lastInsertId();
-            }
-        }
-        
         if ($contract_id) {
             // 계약 수정
             $sql = "UPDATE contracts SET 
-                    landlord_id = ?, tenant_id = ?, agent_id = ?, 
+                    landlord_name = ?, tenant_name = ?, agent_name = ?, 
                     landlord_phone = ?, tenant_phone = ?, agent_phone = ?,
                     start_date = ?, end_date = ?, deposit = ?, monthly_rent = ?";
-            $params = [$landlord_id, $tenant_id, $agent_id, $landlord_phone, $tenant_phone, $agent_phone, $start_date, $end_date, $deposit, $monthly_rent];
+            $params = [$landlord_name, $tenant_name, $agent_name, $landlord_phone, $tenant_phone, $agent_phone, $start_date, $end_date, $deposit, $monthly_rent];
             
             if ($contract_file) {
                 $sql .= ", contract_file = ?";
@@ -229,9 +199,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = '계약이 성공적으로 수정되었습니다.';
         } else {
             // 새 계약 등록
-            $sql = "INSERT INTO contracts (property_id, landlord_id, tenant_id, agent_id, landlord_phone, tenant_phone, agent_phone, start_date, end_date, deposit, monthly_rent, contract_file, created_by, created_ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO contracts (property_id, user_id, landlord_name, tenant_name, agent_name, landlord_phone, tenant_phone, agent_phone, start_date, end_date, deposit, monthly_rent, contract_file, created_by, created_ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$property_id, $landlord_id, $tenant_id, $agent_id, $landlord_phone, $tenant_phone, $agent_phone, $start_date, $end_date, $deposit, $monthly_rent, $contract_file, $user_id, $_SERVER['REMOTE_ADDR']]);
+            $stmt->execute([$property_id, $user_id, $landlord_name, $tenant_name, $agent_name, $landlord_phone, $tenant_phone, $agent_phone, $start_date, $end_date, $deposit, $monthly_rent, $contract_file, $user_id, $_SERVER['REMOTE_ADDR']]);
             
             $contract_id = $pdo->lastInsertId();
             
@@ -676,7 +646,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="form-group">
             <label class="form-label required" for="landlord_phone">임대인 전화번호</label>
             <input type="tel" class="form-input" name="landlord_phone" id="landlord_phone" 
-                   value="<?php echo $contract ? htmlspecialchars($contract['landlord_phone'] ?? '') : ''; ?>"
+                   value="<?php echo $contract ? htmlspecialchars($contract['landlord_phone'] ?? '') : (isset($auto_landlord_phone) ? htmlspecialchars($auto_landlord_phone) : ''); ?>"
                    placeholder="010-1234-5678" required>
             <div class="form-help">임대인 연락처를 입력하세요</div>
           </div>
@@ -691,34 +661,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="agent_id">중개사</label>
-          <select class="form-select" name="agent_id" id="agent_id" <?php echo ($current_user['role'] === 'agent') ? 'disabled' : ''; ?>>
-            <option value="">중개사 선택 (선택사항)</option>
-            <?php foreach ($users as $user): ?>
-              <?php if ($user['role'] === 'agent'): ?>
-                <option value="<?php echo $user['id']; ?>" 
-                  <?php 
-                    if ($contract && $contract['agent_id'] == $user['id']) {
-                      echo 'selected';
-                    } elseif ($current_user['role'] === 'agent' && $current_user['id'] == $user['id']) {
-                      echo 'selected';
-                    }
-                  ?>>
-                  <?php echo htmlspecialchars($user['nickname']); ?>
-                </option>
-              <?php endif; ?>
-            <?php endforeach; ?>
-          </select>
-          <?php if ($current_user['role'] === 'agent'): ?>
-            <input type="hidden" name="agent_id" value="<?php echo $current_user['id']; ?>">
-            <div class="form-help">자동 선택됨 (작성자)</div>
-          <?php endif; ?>
+          <label class="form-label" for="agent_name">중개사</label>
+          <input type="text" class="form-input" name="agent_name" id="agent_name"
+                 value="<?php echo $contract ? htmlspecialchars($contract['agent_name'] ?? '') : ''; ?>"
+                 placeholder="중개사 이름 또는 ID 입력 (선택사항)">
+          <div class="form-help">중개사 이름 또는 ID를 입력하세요</div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="agent_phone">중개사 전화번호</label>
           <input type="tel" class="form-input" name="agent_phone" id="agent_phone" 
-                 value="<?php echo $contract ? htmlspecialchars($contract['agent_phone'] ?? '') : ''; ?>"
+                 value="<?php echo $contract ? htmlspecialchars($contract['agent_phone'] ?? '') : (isset($auto_agent_phone) ? htmlspecialchars($auto_agent_phone) : ''); ?>"
                  placeholder="010-1234-5678">
           <div class="form-help">중개사 연락처를 입력하세요</div>
         </div>

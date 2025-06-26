@@ -266,6 +266,15 @@ $user_role = $_SESSION['role'] ?? '';
     }
 
     /* ... (생략: 테이블, 카드, 반응형 등 필요시 추가) ... */
+    @media (max-width: 700px) {
+      .address-title-wrap { flex-direction: column; align-items: flex-start !important; gap: 0.3rem; }
+      .address-title-btns { width: 100%; margin-top: 0.3rem; }
+      .address-title-text { font-size: 1.08rem; }
+    }
+    @media (min-width: 701px) {
+      .address-title-wrap { flex-direction: row; align-items: center; }
+      .address-title-btns { margin-top: 0; }
+    }
   </style>
 </head>
 <body style="background:#f8f9fa;">
@@ -276,7 +285,21 @@ $user_role = $_SESSION['role'] ?? '';
     <h1 class="page-title">
       <img src="images/camera-icon.svg" alt="카메라" style="width: 32px; height: 32px; margin-right: 12px; vertical-align: middle;">등록 사진
     </h1>
-    <div id="photo-top-actions" style="margin-top:1.2rem;">
+
+    <div style="display:flex; justify-content:flex-end; align-items:center; max-width:900px; margin-bottom:0.5rem; margin-left:auto; margin-right:0;">
+    <a href="contracts.php?property_id=<?php echo urlencode($contract['property_id']); ?>"  class="btn btn-secondary">
+    ← 돌아가기
+    </a>
+  </div>
+
+
+  </div>
+
+  <div class="address-title-wrap" style="max-width:900px; margin:0 auto 0.5rem auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem;">
+    <div class="address-title-text" style="font-size:1.18rem; font-weight:600; color:#222;">
+      <?php echo htmlspecialchars($contract['address']); ?><?php if (!empty($contract['detail_address'])): ?>, <?php echo htmlspecialchars($contract['detail_address']); ?><?php endif; ?>
+    </div>
+    <div class="address-title-btns">
       <?php
       if ($status === 'empty') {
         echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 등록</a>';
@@ -304,54 +327,42 @@ $user_role = $_SESSION['role'] ?? '';
     </div>
   </div>
 
-  <div style="margin:0.7rem 0 1.5rem 0; color:#6c757d; font-size:1.08rem;">
-  <h3>
-    <?php echo htmlspecialchars($contract['address']); ?><?php if (!empty($contract['detail_address'])): ?>, <?php echo htmlspecialchars($contract['detail_address']); ?><?php endif; ?>
-    </h3>
-  </div>
-
-  <div style="display:flex; justify-content:flex-end; align-items:center; max-width:900px; margin:0 auto 0.5rem auto;">
-    <a href="contracts.php?property_id=<?php echo urlencode($contract['property_id']); ?>"  class="btn btn-secondary">
-    ← 계약 관리로 돌아가기
-    </a>
-  </div>
-
   <!-- PC 테이블 -->
   <div class="prop-table-wrap">
     <table class="prop-table">
       <thead>
         <tr>
-          <th>사진</th>
           <th>부위</th>
           <th>설명</th>
           <th>등록일</th>
+          <th>사진</th>
           <th>작업</th>
         </tr>
       </thead>
       <tbody>
         <?php if ($photos): foreach ($photos as $p): ?>
         <tr>
+          <td><span class="prop-address"><?php echo htmlspecialchars($p['part']); ?></span></td>
+          <td style="font-size:0.97rem; color:#495057; max-width: 250px; white-space: normal; word-break: break-all;"><?php echo nl2br(htmlspecialchars($p['description'])); ?></td>
+          <td style="font-size:0.95em; color:#6c757d; white-space:nowrap;"><?php echo htmlspecialchars($p['created_at']); ?></td>
           <td>
-            <?php 
+            <?php
             // 입주 사진 출력
-            for ($i=1; $i<=7; $i++) {
+            for ($i=0; $i<6; $i++) {
               $fp = $p['movein_file_path_0'. $i] ?? null;
               if ($fp) {
-                echo '<img src="'.htmlspecialchars($fp).'" alt="입주사진" style="width:'.($i==1?'90':'60').'px; border-radius:8px;'.($i>1?' margin-left:4px; margin-top:4px;':'').' cursor:pointer;" class="photo-thumb" data-photo-id="'.$p['id'].'">';
+                echo '<img src="'.htmlspecialchars($fp).'" alt="입주사진" style="width:'.($i==0?'90':'60').'px; border-radius:8px;'.($i>0?' margin-left:4px; margin-top:4px;':'').' cursor:pointer;" class="photo-thumb" data-photo-id="'.$p['id'].'">';
               }
             }
             // 퇴거 사진 출력
-            for ($i=1; $i<=7; $i++) {
+            for ($i=0; $i<6; $i++) {
               $fp = $p['moveout_file_path_0'. $i] ?? null;
               if ($fp) {
-                echo '<img src="'.htmlspecialchars($fp).'" alt="퇴거사진" style="width:'.($i==1?'90':'60').'px; border-radius:8px;'.($i>1?' margin-left:4px; margin-top:4px;':'').' cursor:pointer;" class="photo-thumb" data-photo-id="'.$p['id'].'">';
+                echo '<img src="'.htmlspecialchars($fp).'" alt="퇴거사진" style="width:'.($i==0?'90':'60').'px; border-radius:8px;'.($i>0?' margin-left:4px; margin-top:4px;':'').' cursor:pointer;" class="photo-thumb" data-photo-id="'.$p['id'].'">';
               }
             }
             ?>
           </td>
-          <td><span class="prop-address"><?php echo htmlspecialchars($p['part']); ?></span></td>
-          <td style="font-size:0.97rem; color:#495057; max-width: 250px; white-space: normal; word-break: break-all;"><?php echo nl2br(htmlspecialchars($p['description'])); ?></td>
-          <td style="font-size:0.95em; color:#6c757d; white-space:nowrap;"><?php echo htmlspecialchars($p['created_at']); ?></td>
           <td>
             <?php
             if ($status === 'movein_photo' || $status === 'movein_landlord_signed') {
@@ -396,16 +407,16 @@ $user_role = $_SESSION['role'] ?? '';
           <?php endif; ?>
           <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.5rem;">
             <?php 
-            for ($i=1; $i<=7; $i++) {
+            for ($i=0; $i<6; $i++) {
               $fp = $p['movein_file_path_0'. $i] ?? null;
               if ($fp) {
-                echo '<img src="'.htmlspecialchars($fp).'" alt="입주사진" style="width:'.($i==1?'90':'60').'px; border-radius:8px; cursor:pointer;" class="photo-thumb" data-photo-id="'.$p['id'].'">';
+                echo '<img src="'.htmlspecialchars($fp).'" alt="입주사진" style="width:'.($i==0?'90':'60').'px; border-radius:8px; cursor:pointer;" class="photo-thumb" data-photo-id="'.$p['id'].'">';
               }
             }
-            for ($i=1; $i<=7; $i++) {
+            for ($i=0; $i<6; $i++) {
               $fp = $p['moveout_file_path_0'. $i] ?? null;
               if ($fp) {
-                echo '<img src="'.htmlspecialchars($fp).'" alt="퇴거사진" style="width:'.($i==1?'90':'60').'px; border-radius:8px; cursor:pointer;" class="photo-thumb" data-photo-id="'.$p['id'].'">';
+                echo '<img src="'.htmlspecialchars($fp).'" alt="퇴거사진" style="width:'.($i==0?'90':'60').'px; border-radius:8px; cursor:pointer;" class="photo-thumb" data-photo-id="'.$p['id'].'">';
               }
             }
             ?>
@@ -494,7 +505,7 @@ document.querySelectorAll('.photo-thumb').forEach(function(img) {
     const modal = document.getElementById('photoModal');
     const modalImages = document.getElementById('photoModalImages');
     modalImages.innerHTML = '';
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 0; i < 6; i++) {
       const key1 = 'movein_file_path_0' + i;
       if (p[key1]) {
         const img = document.createElement('img');

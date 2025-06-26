@@ -64,9 +64,10 @@ function create_all_tables() {
         CREATE TABLE contracts (
           id INT AUTO_INCREMENT PRIMARY KEY,
           property_id INT,
-          landlord_id INT,
-          tenant_id INT,
-          agent_id INT,
+          user_id INT, -- 등록자
+          landlord_name VARCHAR(64),
+          tenant_name VARCHAR(64),
+          agent_name VARCHAR(64),
           landlord_phone VARCHAR(32),
           tenant_phone VARCHAR(32),
           agent_phone VARCHAR(32),
@@ -80,9 +81,7 @@ function create_all_tables() {
           created_ip VARCHAR(45),
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (property_id) REFERENCES properties(id),
-          FOREIGN KEY (landlord_id) REFERENCES users(id),
-          FOREIGN KEY (tenant_id) REFERENCES users(id),
-          FOREIGN KEY (agent_id) REFERENCES users(id),
+          FOREIGN KEY (user_id) REFERENCES users(id),
           FOREIGN KEY (created_by) REFERENCES users(id)
         );
 
@@ -92,7 +91,7 @@ function create_all_tables() {
           uploader_id INT,
           part VARCHAR(64),
           description TEXT,
-          -- 입주 사진 7개
+          -- 입주 사진 6개
           movein_shot_type_01 ENUM('overview','closeup') DEFAULT 'overview',
           movein_file_path_01 VARCHAR(255),
           movein_meta_data_01 TEXT,
@@ -111,10 +110,7 @@ function create_all_tables() {
           movein_shot_type_06 ENUM('overview','closeup') DEFAULT 'overview',
           movein_file_path_06 VARCHAR(255),
           movein_meta_data_06 TEXT,
-          movein_shot_type_07 ENUM('overview','closeup') DEFAULT 'overview',
-          movein_file_path_07 VARCHAR(255),
-          movein_meta_data_07 TEXT,
-          -- 퇴거 사진 7개
+          -- 퇴거 사진 6개
           moveout_shot_type_01 ENUM('overview','closeup') DEFAULT 'overview',
           moveout_file_path_01 VARCHAR(255),
           moveout_meta_data_01 TEXT,
@@ -133,9 +129,6 @@ function create_all_tables() {
           moveout_shot_type_06 ENUM('overview','closeup') DEFAULT 'overview',
           moveout_file_path_06 VARCHAR(255),
           moveout_meta_data_06 TEXT,
-          moveout_shot_type_07 ENUM('overview','closeup') DEFAULT 'overview',
-          moveout_file_path_07 VARCHAR(255),
-          moveout_meta_data_07 TEXT,
           taken_at DATETIME,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           uploader_ip VARCHAR(45),
@@ -237,16 +230,16 @@ function create_sample_data() {
         ";
         $pdo->exec($properties_sql);
 
-        // 3. 계약 데이터 생성 (landlord 1, agent 2, tenant 1)
+        // 3. 계약 데이터 생성 (landlord_001이 생성한 것 3개, agent_001이 생성한 것 2개)
         $contracts_sql = "
-        INSERT INTO contracts (property_id, landlord_id, tenant_id, agent_id, landlord_phone, tenant_phone, agent_phone, start_date, end_date, deposit, monthly_rent, contract_file, status, created_by, created_ip) VALUES
-        (1, 1, 4, 2, '010-1234-5678', '010-5678-1234', '010-2345-6789', '2024-01-01', '2024-12-31', 10000000, 800000, NULL, 'empty', 1, '127.0.0.1'),
-        (2, 1, 4, 2, '010-1234-5678', '010-5678-1234', '010-2345-6789', '2024-02-01', '2025-01-31', 15000000, 1200000, NULL, 'empty', 2, '127.0.0.1'),
-        (3, 1, 4, 2, '010-1234-5678', '010-5678-1234', '010-2345-6789', '2024-03-01', '2025-02-28', 8000000, 600000, NULL, 'empty', 2, '127.0.0.1')
+        INSERT INTO contracts (property_id, user_id, landlord_name, tenant_name, agent_name, landlord_phone, tenant_phone, agent_phone, start_date, end_date, deposit, monthly_rent, contract_file, status, created_by, created_ip) VALUES
+        (1, 1, '김임대인', '한길길', '박부동산', '010-1234-5678', '010-5678-1234', '010-2345-6789', '2024-01-01', '2024-12-31', 10000000, 800000, NULL, 'empty', 1, '127.0.0.1'),
+        (2, 2, '정부자', '길동무', '이중개', '010-1234-5678', '010-5678-1234', '010-2345-6789', '2024-04-01', '2025-03-31', 12000000, 900000, NULL, 'empty', 2, '127.0.0.1'),
+        (3, 2, '윤부자', '정길동', '이중개', '010-1234-5678', '010-5678-1234', '010-2345-6789', '2024-05-01', '2025-04-30', 11000000, 850000, NULL, 'empty', 2, '127.0.0.1')
         ";
         $pdo->exec($contracts_sql);
 
-        return '샘플 데이터가 성공적으로 생성되었습니다! (사용자 4명, 임대물 3개, 계약 3개)';
+        return '샘플 데이터가 성공적으로 생성되었습니다! (사용자 4명, 임대물 3개, 계약 5개)';
     } catch (PDOException $e) {
         return '샘플 데이터 생성 실패: ' . $e->getMessage();
     }

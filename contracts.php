@@ -32,15 +32,9 @@ $show_finished = isset($_GET['show_finished']) && $_GET['show_finished'] === '1'
 
 // 계약 정보 조회
 $sql = "
-    SELECT c.*, 
-           l.nickname as landlord_name,
-           t.nickname as tenant_name,
-           a.nickname as agent_name
+    SELECT c.*
     FROM contracts c
-    LEFT JOIN users l ON c.landlord_id = l.id
-    LEFT JOIN users t ON c.tenant_id = t.id
-    LEFT JOIN users a ON c.agent_id = a.id
-    WHERE c.property_id = ?
+    WHERE c.property_id = ? AND c.user_id = ?
 ";
 
 if (!$show_finished) {
@@ -50,7 +44,7 @@ if (!$show_finished) {
 $sql .= " ORDER BY c.created_at DESC";
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute([$property_id]);
+$stmt->execute([$property_id, $user_id]);
 $contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // finished 되지 않은 계약이 있는지 확인

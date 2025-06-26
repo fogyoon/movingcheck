@@ -100,32 +100,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 , movein_shot_type_04, movein_file_path_04, movein_meta_data_04
                 , movein_shot_type_05, movein_file_path_05, movein_meta_data_05
                 , movein_shot_type_06, movein_file_path_06, movein_meta_data_06
-                , movein_shot_type_07, movein_file_path_07, movein_meta_data_07
                 , moveout_shot_type_01, moveout_file_path_01, moveout_meta_data_01
                 , moveout_shot_type_02, moveout_file_path_02, moveout_meta_data_02
                 , moveout_shot_type_03, moveout_file_path_03, moveout_meta_data_03
                 , moveout_shot_type_04, moveout_file_path_04, moveout_meta_data_04
                 , moveout_shot_type_05, moveout_file_path_05, moveout_meta_data_05
                 , moveout_shot_type_06, moveout_file_path_06, moveout_meta_data_06
-                , moveout_shot_type_07, moveout_file_path_07, moveout_meta_data_07
                 , taken_at, uploader_ip)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),?)";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $params = [
                 $contract_id, $user_id, $part, $description
             ];
-            // movein 7개
-            for ($i=0; $i<7; $i++) {
+            // movein 6개
+            for ($i=0; $i<6; $i++) {
                 $params[] = $movein_shot_types[$i] ?? null;
                 $params[] = $movein_file_paths[$i] ?? null;
                 $params[] = $movein_meta_datas[$i] ?? null;
             }
-            // moveout 7개
-            for ($i=0; $i<7; $i++) {
+            // moveout 6개
+            for ($i=0; $i<6; $i++) {
                 $params[] = $moveout_shot_types[$i] ?? null;
                 $params[] = $moveout_file_paths[$i] ?? null;
                 $params[] = $moveout_meta_datas[$i] ?? null;
             }
+            $params[] = date('Y-m-d H:i:s');
             $params[] = $_SERVER['REMOTE_ADDR'] ?? '';
+
+            // 디버깅: 파라미터 값 화면에 출력
+            echo '<pre style="background:#222;color:#fff;padding:1em;z-index:9999;position:relative;">';
+            echo "PARAMS:\n";
+            print_r($params);
+            echo '</pre>';
+
             $stmt = $pdo->prepare($sql);
             if ($stmt->execute($params)) {
                 // 사진 등록 성공 후 status 변경 및 signatures 삭제

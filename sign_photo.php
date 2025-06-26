@@ -1,13 +1,52 @@
 <?php
 require_once 'sql.inc';
+if (!isset($_SESSION['user_id'])) {
+  header('Location: login.php');
+  exit;
+}
+$pdo = get_pdo();
+$user_id = $_SESSION['user_id'];
+$contract_id = (int)($_GET['contract_id'] ?? 0);
+if (!$contract_id) {
+  die('잘못된 접근입니다.');
+}
 $contract_id = (int)($_GET['contract_id'] ?? 0);
 if (!$contract_id) die('잘못된 접근입니다.');
+
 $pdo = get_pdo();
 $stmt = $pdo->prepare('SELECT c.*, p.address, p.detail_address FROM contracts c JOIN properties p ON c.property_id = p.id WHERE c.id = ?');
 $stmt->execute([$contract_id]);
 $contract = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$contract) die('계약을 찾을 수 없습니다.');
 $success = isset($_GET['success']);
+
+// 서명 저장 처리 (HTML 출력 전에!)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sign_image'])) {
+    $img = $_POST['sign_image'];
+    if (strpos($img, 'data:image/png;base64,') === 0) {
+        $img = str_replace('data:image/png;base64,', '', $img);
+        $img = base64_decode($img);
+        $file = 'signatures/sign_' . $contract_id . '_' . date('YmdHis') . '.png';
+        if (!is_dir('signatures')) mkdir('signatures', 0777, true);
+        file_put_contents($file, $img);
+        // 서명 DB 저장
+        $signer_role = $_SESSION['role'] ?? 'tenant';
+        $status = $contract['status'];
+        if (strpos($status, 'movein') !== false) $purpose = 'movein';
+        elseif (strpos($status, 'moveout') !== false) $purpose = 'moveout';
+        else $purpose = 'movein';
+        $stmt = $pdo->prepare("INSERT INTO signatures (contract_id, signer_role, purpose, signature_data, signer_ip) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $contract_id,
+            $signer_role,
+            $purpose,
+            $file,
+            $_SERVER['REMOTE_ADDR'] ?? ''
+        ]);
+        header('Location: sign_photo.php?contract_id=' . $contract_id . '&success=1');
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ko">
@@ -124,18 +163,3 @@ if (canvas) {
 </script>
 </body>
 </html>
-<?php
-// 서명 저장 처리
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sign_image'])) {
-    $img = $_POST['sign_image'];
-    if (strpos($img, 'data:image/png;base64,') === 0) {
-        $img = str_replace('data:image/png;base64,', '', $img);
-        $img = base64_decode($img);
-        $file = 'signatures/sign_' . $contract_id . '_' . date('YmdHis') . '.png';
-        if (!is_dir('signatures')) mkdir('signatures', 0777, true);
-        file_put_contents($file, $img);
-        header('Location: sign_photo.php?contract_id=' . $contract_id . '&success=1');
-        exit;
-    }
-}
-?> 
