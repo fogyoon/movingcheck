@@ -287,20 +287,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         // DB 저장 전에 동일 부위(위치) 중복 체크 (기존 photo 수정이 아닌 경우만)
+        $duplicate_part_error = false;
         if (!$existing_photo) {
             $stmt = $pdo->prepare('SELECT COUNT(*) FROM photos WHERE contract_id = ? AND part = ?');
             $stmt->execute([$contract_id, $part]);
             if ($stmt->fetchColumn() > 0) {
                 $msg = '이미 동일한 부위(위치)로 등록된 사진이 있습니다.';
                 $msg_type = 'error';
+                $duplicate_part_error = true;
             }
         }
         
-        // 기존 사진이 있는 경우 새 사진이 없어도 처리 가능
-        $has_new_photos = ($is_movein && $movein_file_paths) || ($is_moveout && $moveout_file_paths);
-        $can_proceed = $has_new_photos || $existing_photo;
-        
-        if (($msg_type !== 'error') && $can_proceed) {
+        // 동일 부위 오류가 없는 경우에만 계속 처리
+        if (!$duplicate_part_error) {
+            // 기존 사진이 있는 경우 새 사진이 없어도 처리 가능
+            $has_new_photos = ($is_movein && $movein_file_paths) || ($is_moveout && $moveout_file_paths);
+            $can_proceed = $has_new_photos || $existing_photo;
+            
+            if (($msg_type !== 'error') && $can_proceed) {
             if ($existing_photo) {
                 // 기존 photo 업데이트
                 $sql = "UPDATE photos SET part = ?, description = ?
@@ -491,6 +495,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $msg = '사진을 1장 이상 업로드 해주세요.';
             $msg_type = 'error';
         }
+        } // !$duplicate_part_error 블록 닫기
     }
 }
 ?>
@@ -823,7 +828,25 @@ function updateCloseupText() {
 }
 
 // 이벤트 리스너 설정
-overviewArea.addEventListener('click', () => overviewInput.click());
+overviewArea.addEventListener('click', () => {
+  // 위치확인용 사진 제한 체크 (최대 1장)
+  <?php if ($existing_photo): ?>
+  const hasExistingOverview = existingOverviewPhoto && !removedExistingPhotos.includes(existingOverviewPhoto.path);
+  const hasNewOverview = overviewInput.files && overviewInput.files.length > 0;
+  
+  if (hasExistingOverview || hasNewOverview) {
+    alert('사진은 1장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
+    return;
+  }
+  <?php else: ?>
+  if (overviewInput.files && overviewInput.files.length > 0) {
+    alert('사진은 1장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
+    return;
+  }
+  <?php endif; ?>
+  
+  overviewInput.click();
+});
 overviewInput.addEventListener('change', function() {
   renderOverviewThumbs();
   updateOverviewText();
@@ -832,6 +855,23 @@ overviewArea.addEventListener('dragover', e => { e.preventDefault(); overviewAre
 overviewArea.addEventListener('dragleave', () => overviewArea.classList.remove('dragover'));
 overviewArea.addEventListener('drop', e => {
   e.preventDefault(); overviewArea.classList.remove('dragover');
+  
+  // 위치확인용 사진 제한 체크 (최대 1장)
+  <?php if ($existing_photo): ?>
+  const hasExistingOverview = existingOverviewPhoto && !removedExistingPhotos.includes(existingOverviewPhoto.path);
+  const hasNewOverview = overviewInput.files && overviewInput.files.length > 0;
+  
+  if (hasExistingOverview || hasNewOverview) {
+    alert('사진은 1장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
+    return;
+  }
+  <?php else: ?>
+  if (overviewInput.files && overviewInput.files.length > 0) {
+    alert('사진은 1장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
+    return;
+  }
+  <?php endif; ?>
+  
   if (e.dataTransfer.files.length > 0) {
     overviewInput.files = e.dataTransfer.files;
     renderOverviewThumbs();
@@ -839,7 +879,26 @@ overviewArea.addEventListener('drop', e => {
   }
 });
 
-closeupArea.addEventListener('click', () => closeupInput.click());
+closeupArea.addEventListener('click', () => {
+  // 세부사진 제한 체크 (최대 5장)
+  <?php if ($existing_photo): ?>
+  const existingCloseupCount = existingCloseupPhotos.filter(p => !removedExistingPhotos.includes(p.path)).length;
+  const newCloseupCount = closeupFiles.length;
+  const totalCloseupCount = existingCloseupCount + newCloseupCount;
+  
+  if (totalCloseupCount >= 5) {
+    alert('사진은 5장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
+    return;
+  }
+  <?php else: ?>
+  if (closeupFiles.length >= 5) {
+    alert('사진은 5장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
+    return;
+  }
+  <?php endif; ?>
+  
+  closeupInput.click();
+});
 closeupInput.addEventListener('change', function(e) {
   // 누적: 기존 closeupFiles + 새로 선택한 파일
   if (this.files.length > 0) {
@@ -855,7 +914,7 @@ closeupInput.addEventListener('change', function(e) {
     
     // 최대 5장 제한
     if (currentTotal >= 5) {
-      alert('5개까지만 등록이 가능합니다.');
+      alert('사진은 5장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
       this.value = '';
       return;
     }
@@ -863,7 +922,7 @@ closeupInput.addEventListener('change', function(e) {
     let total = currentTotal + newFiles.length;
     if (total > 5) {
       newFiles = newFiles.slice(0, 5 - currentTotal);
-      alert('5개까지만 등록이 가능합니다.');
+      alert('사진은 5장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
     }
     
     closeupFiles = closeupFiles.concat(newFiles);
@@ -888,14 +947,14 @@ closeupArea.addEventListener('drop', e => {
   <?php endif; ?>
   
   if (currentTotalDrop >= 5) {
-    alert('5개까지만 등록이 가능합니다.');
+    alert('사진은 5장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
     return;
   }
   
   let total = currentTotalDrop + newFiles.length;
   if (total > 5) {
     newFiles = newFiles.slice(0, 5 - currentTotalDrop);
-    alert('5개까지만 등록이 가능합니다.');
+    alert('사진은 5장까지 등록 가능합니다. 다른 사진을 추가하려면 등록된 사진을 지워야 합니다.');
   }
   
   closeupFiles = closeupFiles.concat(newFiles);

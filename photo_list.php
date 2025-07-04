@@ -983,6 +983,17 @@ if (isset($_GET['request_sign'])) {
             echo '<button class="btn btn-success" onclick="handleSign()">본인 서명하기</button>';
           }
         }
+        // 사진이 있을 때 설명 문구 추가
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 사진 등록 버튼으로 다른 곳의 사진을 추가할 수 있습니다.<br>';
+          if ($user_role_in_contract === 'agent') {
+            echo '사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          } else {
+            echo '본인 서명은 모든 사진 등록이 끝난 후 진행하세요.';
+          }
+          echo '</div>';
+        }
       } elseif ($status === 'movein_landlord_signed') {
         if (!$has_unconfirmed_mismatch) {
           $button_text = $tenant_request_sent ? '임차인에게 사진 재전송' : '임차인에게 사진 전송';
@@ -990,6 +1001,13 @@ if (isset($_GET['request_sign'])) {
           echo '<button class="btn btn-warning" onclick="' . $onclick . '">' . $button_text . '</button>';
         }
         echo '<a href="#" onclick="confirmPhotoChange(\'photo_upload.php?contract_id=' . $contract_id . '\'); return false;" class="btn btn-primary" style="margin-left:1.5rem;">입주사진 등록</a> ';
+        // 사진이 있을 때 설명 문구 추가
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 사진 등록 버튼으로 다른 곳의 사진을 추가할 수 있습니다.<br>';
+          echo '사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          echo '</div>';
+        }
       } elseif ($status === 'moveout_photo') {
         if (!empty($photos) && !$has_unconfirmed_mismatch) { // 사진이 있고 불일치 미확인이 없을 때만 서명/전송 버튼 표시
           if ($user_role_in_contract === 'agent') {
@@ -1000,11 +1018,29 @@ if (isset($_GET['request_sign'])) {
             echo '<button class="btn btn-success" onclick="handleSign()">퇴거 사진에 본인 서명하기</button>';
           }
         }
+        // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.<br>';
+          if ($user_role_in_contract === 'agent') {
+            echo '파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          } else {
+            echo '본인 서명은 모든 사진 등록이 끝난 후 진행하세요.';
+          }
+          echo '</div>';
+        }
       } elseif ($status === 'moveout_landlord_signed') {
         if (!$has_unconfirmed_mismatch) {
           $button_text = $tenant_request_sent ? '임차인에게 파손사진 재전송' : '임차인에게 파손사진 전송';
           $onclick = $tenant_request_sent ? 'confirmResendLink(\'tenant\')' : 'generateShareLink(\'tenant\')';
           echo '<button class="btn btn-warning" onclick="' . $onclick . '">' . $button_text . '</button>';
+        }
+        // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.<br>';
+          echo '파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          echo '</div>';
         }
       } elseif ($status === 'moveout_tenant_signed' || $status === 'in_repair') {
         // 퇴거 사진이 있는지 확인
@@ -1304,9 +1340,34 @@ if (isset($_GET['request_sign'])) {
             echo '<button class="btn btn-success" onclick="handleSign()">본인 서명하기</button>';
           }
         }
+        // 사진이 있을 때 설명 문구 추가
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 사진 등록 버튼으로 다른 곳의 사진을 추가할 수 있습니다.<br>';
+          if ($user_role_in_contract === 'agent') {
+            echo '사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          } else {
+            echo '본인 서명은 모든 사진 등록이 끝난 후 진행하세요.';
+          }
+          echo '</div>';
+        }
       } elseif ($status === 'movein_landlord_signed') {
         echo '<button class="btn btn-warning">임차인에게 사진 전송</button>';
         echo '<a href="#" onclick="confirmPhotoChange(\'photo_upload.php?contract_id=' . $contract_id . '\'); return false;" class="btn btn-primary" style="margin-left:1.5rem;">입주사진 등록</a> ';
+        // 사진이 있을 때 설명 문구 추가
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 사진 등록 버튼으로 다른 곳의 사진을 추가할 수 있습니다.<br>';
+          echo '사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          echo '</div>';
+        }
+      } elseif ($status === 'movein_tenant_signed') {
+        // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.';
+          echo '</div>';
+        }
       } elseif ($status === 'moveout_photo') {
         if (!empty($photos)) { // 사진이 있을 때만 서명/전송 버튼 표시
           if ($user_role_in_contract === 'agent') {
@@ -1315,8 +1376,26 @@ if (isset($_GET['request_sign'])) {
             echo '<button class="btn btn-success" onclick="handleSign()">퇴거 사진에 본인 서명하기</button>';
           }
         }
+        // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.<br>';
+          if ($user_role_in_contract === 'agent') {
+            echo '파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          } else {
+            echo '본인 서명은 모든 사진 등록이 끝난 후 진행하세요.';
+          }
+          echo '</div>';
+        }
       } elseif ($status === 'moveout_landlord_signed') {
         echo '<button class="btn btn-warning">임차인에게 파손사진 전송</button>';
+        // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
+        if (!empty($photos)) {
+          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
+          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.<br>';
+          echo '파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          echo '</div>';
+        }
       } elseif ($status === 'moveout_tenant_signed' || $status === 'in_repair') {
         // 퇴거 사진이 있는지 확인 (사진 3개 이상일 때 표시)
         $has_moveout_photos_large = false;
