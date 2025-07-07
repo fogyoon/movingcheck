@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="edit-form-group">
             <label class="edit-label">설명</label>
-            <textarea name="description" class="edit-textarea"><?php echo htmlspecialchars($property['description'] ?? ''); ?></textarea>
+            <textarea name="description" class="edit-textarea" placeholder="이 물건에 본인만의 메모할 사항이 있으면 입력하세요."><?php echo htmlspecialchars($property['description'] ?? ''); ?></textarea>
         </div>
         <div style="display:flex; gap:0.7rem;">
             <button type="submit" class="edit-btn"><?php echo $editing ? '수정 완료' : '등록 완료'; ?></button>
