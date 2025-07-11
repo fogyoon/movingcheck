@@ -1,8 +1,69 @@
 /* 무빙체크(MovingCheck) 메인 테마 CSS */
 
+@font-face {
+    font-family: 'NanumSquareNeoLight';
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-aLt.eot);
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-aLt.eot?#iefix) format("embedded-opentype"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-aLt.woff) format("woff"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-aLt.ttf) format("truetype");
+}
+
+@font-face {
+    font-family: 'NanumSquareNeo';
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.eot);
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.eot?#iefix) format("embedded-opentype"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.woff) format("woff"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-bRg.ttf) format("truetype");
+}
+
+@font-face {
+    font-family: 'NanumSquareNeoBold';
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.eot);
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.eot?#iefix) format("embedded-opentype"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.woff) format("woff"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-cBd.ttf) format("truetype");
+}
+
+@font-face {
+    font-family: 'NanumSquareNeoExtraBold';
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.eot);
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.eot?#iefix) format("embedded-opentype"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.woff) format("woff"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-dEb.ttf) format("truetype");
+}
+
+@font-face {
+    font-family: 'NanumSquareNeoHeavy';
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-eHv.eot);
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-eHv.eot?#iefix) format("embedded-opentype"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-eHv.woff) format("woff"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeoTTF-eHv.ttf) format("truetype");
+}
+
+@font-face {
+    font-family: 'NanumSquareNeoVariable';
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeo-Variable.eot);
+    src: url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeo-Variable.eot?#iefix) format("embedded-opentype"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeo-Variable.woff) format("woff"), url(https://hangeul.pstatic.net/hangeul_static/webfont/NanumSquareNeo/NanumSquareNeo-Variable.ttf) format("truetype");
+}
+
+.font1 {
+    font-family: 'NanumSquareNeoLight';
+}
+
+.font2 {
+    font-family: 'NanumSquareNeo';
+}
+
+.font3 {
+    font-family: 'NanumSquareNeoBold';
+}
+
+.font4 {
+    font-family: 'NanumSquareNeoExtraBold';
+}
+
+.font5 {
+    font-family: 'NanumSquareNeoHeavy';
+}
+
+.font6 {
+    font-family: 'NanumSquareNeoVariable';
+} 
+
+
 body {
     background: #f9fbfc;
-    font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', Arial, sans-serif;
+    font-family: 'NanumSquareNeo', 'Apple SD Gothic Neo', Arial, sans-serif;
     color: #222;
     margin: 0;
     padding: 0;
@@ -535,4 +596,178 @@ body.main-home .mc-header {
   .mc-mobile-menu {
     display: none !important;
   }
+}
+
+/* 전화번호 입력 필드 스타일 */
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.phone-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  text-align: center;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.phone-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+}
+
+.phone-input:invalid {
+  border-color: #f44336;
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.1);
+}
+
+.phone-separator {
+  font-size: 1.2rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 필수 입력 필드 스타일 */
+.form-input:required:invalid,
+.phone-input:required:invalid {
+  border-color: #f44336;
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.1);
+}
+
+.form-input:required:valid,
+.phone-input:required:valid {
+  border-color: #4caf50;
+}
+
+/* 유효성 검사 클래스 스타일 */
+.phone-input.invalid {
+  border-color: #f44336;
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.1);
+}
+
+.phone-input.valid {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+/* 모바일 반응형 */
+@media (max-width: 600px) {
+  .phone-input-group {
+    gap: 0.3rem;
+  }
+  
+  .phone-input {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.9rem;
+  }
+  
+  .phone-separator {
+    font-size: 1rem;
+  }
 } 
+
+/* Notice text styling for photo registration instructions */
+.notice-text {
+  padding: 0.6rem;
+  border: 2px solid #b19954;
+  border-radius: 6px;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+/* Photo registration button container styling */
+.photo-btn-container {
+  margin: 1rem 0;
+  text-align: left;
+}
+
+/* Address title wrapper spacing */
+.address-title-wrap {
+  max-width: 900px;
+  margin: 0 auto 0.5rem auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Address title text styling */
+.address-title-text {
+  font-size: 1.18rem;
+  font-weight: 600;
+  color: #222;
+}
+
+/* Address title buttons container */
+.address-title-btns {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Address title buttons with extra margin for mobile section */
+.address-title-btns.mobile-section {
+  margin: 2.5rem 0 1.5rem 0;
+}
+
+/* Warning notice styling for mismatch alerts */
+.notice-warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+/* Contract completion button styling */
+.btn-complete {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem 0.8rem 2.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+
+.btn-complete:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+  color: white;
+}
+
+.btn-complete:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-complete::before {
+  content: '✓';
+  position: absolute;
+  left: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+

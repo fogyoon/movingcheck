@@ -7,20 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 세션 삭제 처리 (AJAX 요청)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'clear_session') {
-    header('Content-Type: application/json');
-    
-    $contract_id = (int)($_POST['contract_id'] ?? 0);
-    
-    // 해당 계약의 세션 정보만 삭제
-    if ($contract_id && isset($_SESSION['verified_contracts'][$contract_id])) {
-        unset($_SESSION['verified_contracts'][$contract_id]);
-    }
-    
-    echo json_encode(['success' => true]);
-    exit;
-}
+
 
 // URL 파라미터에서 보안키 및 역할 확인
 $security_key = $_GET['key'] ?? '';
@@ -53,7 +40,7 @@ $stmt->execute([$security_key, $security_key, $security_key, $security_key]);
 $contract = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$contract) {
-    die('계약을 찾을 수 없습니다.');
+    die('이미 만료된 링크입니다.');
 }
 
 // 어떤 키 타입인지 확인
@@ -94,6 +81,7 @@ if (in_array($contract['status'], ['finished', 'empty'])) {
 }
 
 // movein_tenant_signed 상태에서 moveout_photo로 자동 전환
+/*
 if ($contract['status'] === 'movein_tenant_signed') {
     try {
         $stmt = $pdo->prepare('UPDATE contracts SET status = ? WHERE id = ?');
@@ -108,6 +96,7 @@ if ($contract['status'] === 'movein_tenant_signed') {
         // 오류가 발생해도 계속 진행
     }
 }
+*/
 
 // 비밀번호 확인 처리
 $password_verified = false;
@@ -520,6 +509,47 @@ if ($need_signature) {
                 max-width: 200px !important;
             }
         }
+        
+        /* 전화번호 입력 필드 스타일 */
+        .phone-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .phone-input {
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: 100px;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: center;
+            background: #fff;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        .phone-separator {
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: 500;
+        }
+        @media (max-width: 600px) {
+            .phone-input-group {
+                gap: 0.2rem;
+                width: 100%;
+            }
+            .phone-input {
+                padding: 0.5rem 0.2rem;
+                font-size: 0.95rem;
+                max-width: 70px;
+            }
+            .phone-separator {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -672,13 +702,27 @@ if ($need_signature) {
                 <?php if ($photos): ?>
                     <?php
                     // 입주/퇴거 사진 비교인 경우 퇴거 사진이 있는 부위만 필터링
+                    // 입주 단계에서는 입주 사진이 있는 부위만 표시
                     $photos_to_display = $photos;
                     if ($show_moveout) {
+                        // 퇴거 단계: 퇴거 사진이 있는 부위만 필터링
                         $photos_to_display = array_filter($photos, function($photo) {
                             // 퇴거 사진이 하나라도 있는지 확인
                             for ($i = 1; $i <= 6; $i++) {
                                 $moveout_file = $photo['moveout_file_path_0' . $i];
                                 if (!empty($moveout_file)) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        });
+                    } else {
+                        // 입주 단계: 입주 사진이 있는 부위만 필터링
+                        $photos_to_display = array_filter($photos, function($photo) {
+                            // 입주 사진이 하나라도 있는지 확인
+                            for ($i = 1; $i <= 6; $i++) {
+                                $movein_file = $photo['movein_file_path_0' . $i];
+                                if (!empty($movein_file)) {
                                     return true;
                                 }
                             }
@@ -692,117 +736,78 @@ if ($need_signature) {
                             <?php echo $show_moveout ? '퇴거 사진이 등록된 부위가 없습니다.' : '등록된 사진이 없습니다.'; ?>
                         </p>
                     <?php else: ?>
-                        <div style="width: 100%;">
-                            <?php foreach ($photos_to_display as $photo): ?>
-                                <!-- 부위별 정보 -->
-                                <div style="margin-bottom: 3rem;">
-                                    <h4 style="color: #333; margin-bottom: 1rem; text-align: center; font-size: 1.5rem; border-bottom: 2px solid #e9ecef; padding-bottom: 0.5rem;">
-                                        📍 <?php echo htmlspecialchars($photo['part']); ?>
-                                    </h4>
-                                    
-                                    <?php if ($photo['description']): ?>
-                                        <p style="color: #666; font-size: 0.9rem; text-align: center; margin-bottom: 2rem;">
-                                            <?php echo nl2br(htmlspecialchars($photo['description'])); ?>
-                                        </p>
-                                    <?php endif; ?>
-
-                                    <?php
-                                    // movein과 moveout 사진을 인덱스별로 매칭
-                                    $overviewPairs = [];
-                                    $closeupPairs = [];
-                                    
-                                    for ($i = 1; $i <= 6; $i++) {
-                                        $moveinFilePath = $photo['movein_file_path_0' . $i];
-                                        $moveinShotType = $photo['movein_shot_type_0' . $i];
-                                        $moveoutFilePath = $photo['moveout_file_path_0' . $i];
-                                        $moveoutShotType = $photo['moveout_shot_type_0' . $i];
-                                        
-                                        if ($moveinFilePath) {
-                                            $pair = [
-                                                'index' => $i,
-                                                'movein' => ['src' => $moveinFilePath, 'type' => 'movein'],
-                                                'moveout' => $moveoutFilePath ? ['src' => $moveoutFilePath, 'type' => 'moveout'] : null
-                                            ];
-                                            
-                                            // 입주/퇴거 비교 모드에서는 퇴거 사진이 있는 쌍만 표시
-                                            if ($show_moveout && !$moveoutFilePath) {
-                                                continue;
-                                            }
-                                            
-                                            if ($moveinShotType === 'overview') {
-                                                $overviewPairs[] = $pair;
-                                            } else if ($moveinShotType === 'closeup') {
-                                                $closeupPairs[] = $pair;
-                                            }
+                        <?php foreach ($photos_to_display as $photo): ?>
+                            <div style="margin-bottom: 3rem;">
+                                <h4 style="color: #333; margin-bottom: 1rem; text-align: center; font-size: 1.5rem; border-bottom: 2px solid #e9ecef; padding-bottom: 0.5rem;">
+                                    📍 <?php echo htmlspecialchars($photo['part']); ?>
+                                </h4>
+                                <?php
+                                // 위치확인용(overview) 사진 먼저 출력
+                                for ($i = 1; $i <= 6; $i++) {
+                                    $moveinFilePath = $photo['movein_file_path_0' . $i];
+                                    $moveinShotType = $photo['movein_shot_type_0' . $i];
+                                    $moveoutFilePath = $photo['moveout_file_path_0' . $i];
+                                    if ($moveinFilePath && $moveinShotType === 'overview') {
+                                        echo '<div style="margin-bottom:1.2rem; text-align:center;">';
+                                        echo '<span style="display:inline-block; color:#1976d2; font-weight:600; margin-bottom:0.3rem;">입주시 촬영한 위치 확인용 사진</span><br>';
+                                        echo '<img src="'.htmlspecialchars($moveinFilePath).'" alt="입주시 촬영한 위치 확인용 사진" style="max-width:320px; max-height:45vh; border-radius:8px; border:2px solid #1976d2; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:0.5rem;">';
+                                        echo '</div>';
+                                    }
+                                }
+                                ?>
+                                <!-- 기존 입주/퇴거 비교 사진 출력 구조는 그대로 -->
+                                <?php
+                                $overviewPairs = [];
+                                $closeupPairs = [];
+                                for ($i = 1; $i <= 6; $i++) {
+                                    $moveinFilePath = $photo['movein_file_path_0' . $i];
+                                    $moveinShotType = $photo['movein_shot_type_0' . $i];
+                                    $moveoutFilePath = $photo['moveout_file_path_0' . $i];
+                                    $moveoutShotType = $photo['moveout_shot_type_0' . $i];
+                                    if ($moveinFilePath) {
+                                        $pair = [
+                                            'index' => $i,
+                                            'movein' => ['src' => $moveinFilePath, 'type' => 'movein'],
+                                            'moveout' => $moveoutFilePath ? ['src' => $moveoutFilePath, 'type' => 'moveout'] : null
+                                        ];
+                                        // 퇴거 단계에서만 퇴거 사진이 있는 경우만 표시
+                                        if ($show_moveout && !$moveoutFilePath) {
+                                            continue;
+                                        }
+                                        if ($moveinShotType === 'overview') {
+                                            $overviewPairs[] = $pair;
+                                        } else if ($moveinShotType === 'closeup') {
+                                            $closeupPairs[] = $pair;
                                         }
                                     }
-                                    ?>
+                                }
+                                ?>
 
-                                <!-- overview 사진 먼저 표시 -->
-                                <?php if (count($overviewPairs) > 0): ?>
-                                    <div style="width: 100%; margin-bottom: 2.5rem;">
-                                        <h3 style="color: #1976d2; font-size: 1.2rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600;">위치확인용 사진</h3>
-                                        
-                                        <div style="display: flex; flex-direction: column; gap: 2rem; align-items: center;">
-                                            <?php foreach ($overviewPairs as $pair): ?>
-                                                <?php if ($pair['moveout']): ?>
-                                                    <!-- moveout 사진이 있는 경우: 비교 보기 -->
-                                                    <div style="display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; justify-content: center; padding: 1rem; border: 2px solid #e9ecef; border-radius: 12px; background: #f8f9fa;">
-                                                        <!-- 입주 시 사진 -->
-                                                        <div style="text-align: center;">
-                                                            <h4 style="margin: 0 0 0.5rem 0; color: #1976d2; font-size: 1rem; font-weight: 600;">입주 시</h4>
-                                                            <img src="<?php echo htmlspecialchars($pair['movein']['src']); ?>" alt="입주사진" 
-                                                                 style="max-width: 350px; max-height: 50vh; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #1976d2;">
-                                                        </div>
-                                                        
-                                                        <!-- 퇴거 시 사진 -->
-                                                        <div style="text-align: center;">
-                                                            <h4 style="margin: 0 0 0.5rem 0; color: #28a745; font-size: 1rem; font-weight: 600;">퇴거 시</h4>
-                                                            <img src="<?php echo htmlspecialchars($pair['moveout']['src']); ?>" alt="퇴거사진" 
-                                                                 style="max-width: 350px; max-height: 50vh; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #28a745;">
-                                                        </div>
-                                                    </div>
-                                                <?php else: ?>
-                                                    <!-- moveout 사진이 없는 경우: 단일 보기 -->
-                                                    <div style="text-align: center;">
-                                                        <img src="<?php echo htmlspecialchars($pair['movein']['src']); ?>" alt="입주사진" 
-                                                             style="max-width: 420px; max-height: 60vh; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.13); border: 2px solid #1976d2;">
-                                                    </div>
-                                                <?php endif; ?>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-
-                                <!-- closeup 사진 표시 -->
+                                <!-- closeup 사진 출력 -->
                                 <?php if (count($closeupPairs) > 0): ?>
-                                    <div style="width: 100%;">
-                                        <h3 style="color: #666; font-size: 1.2rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600;">세부 사진</h3>
-                                        
+                                    <div style="width: 100%; margin-bottom: 2.5rem;">
+                                        <h3 style="color: #dc3545; font-size: 1.2rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600;">
+                                            <?php echo $show_moveout ? '세부 사진 비교' : '세부 사진'; ?>
+                                        </h3>
                                         <div style="display: flex; flex-direction: column; gap: 2rem; align-items: center;">
                                             <?php foreach ($closeupPairs as $pair): ?>
-                                                <?php if ($pair['moveout']): ?>
-                                                    <!-- moveout 사진이 있는 경우: 비교 보기 -->
+                                                <?php if ($show_moveout && $pair['moveout']): ?>
+                                                    <!-- 퇴거 단계: 입주/퇴거 비교 -->
                                                     <div style="display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; justify-content: center; padding: 1rem; border: 2px solid #e9ecef; border-radius: 12px; background: #f8f9fa;">
-                                                        <!-- 입주 시 사진 -->
                                                         <div style="text-align: center;">
                                                             <h4 style="margin: 0 0 0.5rem 0; color: #1976d2; font-size: 1rem; font-weight: 600;">입주 시</h4>
-                                                            <img src="<?php echo htmlspecialchars($pair['movein']['src']); ?>" alt="입주사진" 
-                                                                 style="max-width: 300px; max-height: 45vh; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #1976d2;">
+                                                            <img src="<?php echo htmlspecialchars($pair['movein']['src']); ?>" alt="입주사진" style="max-width: 350px; max-height: 50vh; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #1976d2;">
                                                         </div>
-                                                        
-                                                        <!-- 퇴거 시 사진 -->
                                                         <div style="text-align: center;">
                                                             <h4 style="margin: 0 0 0.5rem 0; color: #28a745; font-size: 1rem; font-weight: 600;">퇴거 시</h4>
-                                                            <img src="<?php echo htmlspecialchars($pair['moveout']['src']); ?>" alt="퇴거사진" 
-                                                                 style="max-width: 300px; max-height: 45vh; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #28a745;">
+                                                            <img src="<?php echo htmlspecialchars($pair['moveout']['src']); ?>" alt="퇴거사진" style="max-width: 350px; max-height: 50vh; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #28a745;">
                                                         </div>
                                                     </div>
-                                                <?php else: ?>
-                                                    <!-- moveout 사진이 없는 경우: 단일 보기 -->
-                                                    <div style="text-align: center;">
-                                                        <img src="<?php echo htmlspecialchars($pair['movein']['src']); ?>" alt="입주사진" 
-                                                             style="max-width: 320px; max-height: 50vh; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.13);">
+                                                <?php elseif (!$show_moveout): ?>
+                                                    <!-- 입주 단계: 입주 사진만 표시 -->
+                                                    <div style="text-align: center; padding: 1rem; border: 2px solid #e9ecef; border-radius: 12px; background: #f8f9fa;">
+                                                        <h4 style="margin: 0 0 0.5rem 0; color: #1976d2; font-size: 1rem; font-weight: 600;">입주 시</h4>
+                                                        <img src="<?php echo htmlspecialchars($pair['movein']['src']); ?>" alt="입주사진" style="max-width: 350px; max-height: 50vh; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 2px solid #1976d2;">
                                                     </div>
                                                 <?php endif; ?>
                                             <?php endforeach; ?>
@@ -811,7 +816,6 @@ if ($need_signature) {
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
-                    </div>
                     <?php endif; ?>
                 <?php else: ?>
                     <p style="text-align: center; color: #666; font-size: 1.1rem; padding: 2rem;">
@@ -854,7 +858,7 @@ if ($need_signature) {
                     <!-- 서명 입력 폼 -->
                     <div class="signature-section">
                         <h3 style="margin-top: 0; color: #333; text-align: center;">
-                            ✍️ <?php echo ($show_moveout ? '입주, 퇴거(파손)' : '입주'); ?> 사진을 충분히 검토하였기에 서명합니다.
+                            ✍️ <?php echo ($show_moveout ? '입주/퇴거 사진 비교을 통해 파손 여부를 ' : '입주 사진을'); ?> 충분히 확인하였기에 서명합니다.
                         </h3>
                         
                         <form method="POST" id="signatureForm">
@@ -870,9 +874,14 @@ if ($need_signature) {
                                 </div>
                                 <div>
                                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">전화번호 *</label>
-                                    <input type="text" name="signer_phone" required 
-                                           style="width: 100%; padding: 0.8rem; border: 2px solid #e9ecef; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
-                                           placeholder="010-0000-0000" pattern="[0-9\-\s]*" inputmode="text">
+                                    <div class="phone-input-group">
+                                        <input type="text" class="phone-input" name="signer_phone_1" id="signer_phone_1" maxlength="3" inputmode="numeric" required>
+                                        <span class="phone-separator">-</span>
+                                        <input type="text" class="phone-input" name="signer_phone_2" id="signer_phone_2" maxlength="4" inputmode="numeric" required>
+                                        <span class="phone-separator">-</span>
+                                        <input type="text" class="phone-input" name="signer_phone_3" id="signer_phone_3" maxlength="4" inputmode="numeric" required>
+                                        <input type="hidden" name="signer_phone" id="signer_phone" value="<?php echo isset($_POST['signer_phone']) ? htmlspecialchars($_POST['signer_phone']) : ''; ?>">
+                                    </div>
                                 </div>
                             </div>
                             
@@ -916,219 +925,123 @@ if ($need_signature) {
 
 
     <script>
-        // 계약 ID 및 세션 관리 변수
+        // 계약 ID 및 상태 변수
         const contractId = <?php echo $contract['id']; ?>;
         const isSignedView = <?php echo $show_limited_view ? 'true' : 'false'; ?>;
         const isSignatureSuccess = <?php echo isset($signature_success) ? 'true' : 'false'; ?>;
-        
-        // 세션 삭제 함수
-        function clearSession() {
-            if (navigator.sendBeacon) {
-                // sendBeacon 사용 (페이지 언로드 시에도 안전하게 전송)
-                const formData = new FormData();
-                formData.append('action', 'clear_session');
-                formData.append('contract_id', contractId);
-                navigator.sendBeacon(window.location.href, formData);
-            } else {
-                // 일반 fetch 사용 (비동기)
-                fetch(window.location.href, {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        action: 'clear_session',
-                        contract_id: contractId
-                    }),
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                }).catch(function(error) {
-                    console.log('세션 삭제 중 오류:', error);
-                });
-            }
-        }
-        
-        // 페이지 떠나기 이벤트 처리
-        window.addEventListener('beforeunload', function(e) {
-            clearSession();
-        });
-        
-        // 페이지 숨김 이벤트 처리 (모바일에서 탭 전환 시)
-        window.addEventListener('pagehide', function(e) {
-            clearSession();
-        });
-        
-        // 페이지 로딩 완료 후 서명 완료 상태이거나 제한된 뷰일 때 세션 삭제
-        window.addEventListener('load', function() {
-            if (isSignedView || isSignatureSuccess) {
-                // 3초 후 세션 삭제 (사용자가 내용을 볼 시간 제공)
-                setTimeout(function() {
-                    clearSession();
-                }, 3000);
-            }
-        });
 
-        // 서명 캔버스 기능
+        // 서명 캔버스 기능 (signature_test.php 방식 적용)
         <?php if ($need_signature && !isset($signature_success)): ?>
         const canvas = document.getElementById('signatureCanvas');
         const ctx = canvas.getContext('2d');
         let isDrawing = false;
         let hasSignature = false;
+        let lastX = 0, lastY = 0;
 
-        // 캔버스 크기 조정 함수
-        function resizeCanvas() {
-            const rect = canvas.getBoundingClientRect();
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            
-            // 모바일에서 화면 크기에 맞게 조정
-            if (window.innerWidth <= 768) {
-                const maxWidth = window.innerWidth - 40; // 좌우 20px 여백
-                if (maxWidth < 400) {
-                    canvas.width = Math.min(maxWidth, 350);
-                    canvas.height = Math.floor(canvas.width * 0.5); // 높이 비율 조정
+        // 캔버스 내용 보존 및 복원
+        function preserveCanvasContent() {
+            if (canvas.width > 0 && canvas.height > 0) {
+                return ctx.getImageData(0, 0, canvas.width, canvas.height);
+            }
+            return null;
+        }
+        function restoreCanvasContent(imageData) {
+            if (imageData && hasSignature) {
+                try {
+                    ctx.putImageData(imageData, 0, 0);
+                    return true;
+                } catch (e) {
+                    return false;
                 }
             }
-            
-            canvas.style.width = canvas.width + 'px';
-            canvas.style.height = canvas.height + 'px';
-            
-            // 고해상도 디스플레이 대응
-            canvas.width = canvas.width * ratio;
-            canvas.height = canvas.height * ratio;
-            ctx.scale(ratio, ratio);
-            
-            // 캔버스 스타일 재설정
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
+            return false;
         }
 
-        // 초기 캔버스 설정
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const savedImageData = preserveCanvasContent();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            restoreCanvasContent(savedImageData);
+        }
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeCanvas, 150);
+        });
         resizeCanvas();
-
-        // 화면 크기 변경 시 캔버스 조정
-        window.addEventListener('resize', resizeCanvas);
-
-        // 마우스 이벤트
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-
-        // 터치 이벤트 (모바일)
-        canvas.addEventListener('touchstart', handleTouch, { passive: false });
-        canvas.addEventListener('touchmove', handleTouch, { passive: false });
-        canvas.addEventListener('touchend', handleTouch, { passive: false });
 
         function getCanvasCoordinates(e) {
             const rect = canvas.getBoundingClientRect();
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            
-            // 실제 canvas 크기와 표시되는 크기의 비율을 고려
-            const scaleX = (canvas.width / ratio) / rect.width;
-            const scaleY = (canvas.height / ratio) / rect.height;
-            
+            const dpr = window.devicePixelRatio || 1;
+            const scaleX = (canvas.width / dpr) / rect.width;
+            const scaleY = (canvas.height / dpr) / rect.height;
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
             return {
-                x: (e.clientX - rect.left) * scaleX,
-                y: (e.clientY - rect.top) * scaleY
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
             };
         }
 
         function startDrawing(e) {
+            e.preventDefault();
+            e.stopPropagation();
             isDrawing = true;
             const coords = getCanvasCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
             ctx.beginPath();
-            ctx.moveTo(coords.x, coords.y);
-            
-            // 서명 중 페이지 스크롤 방지
-            document.body.style.overflow = 'hidden';
+            ctx.moveTo(lastX, lastY);
         }
-
         function draw(e) {
             if (!isDrawing) return;
-            
+            e.preventDefault();
+            e.stopPropagation();
             const coords = getCanvasCoordinates(e);
             ctx.lineTo(coords.x, coords.y);
             ctx.stroke();
+            lastX = coords.x;
+            lastY = coords.y;
             hasSignature = true;
         }
-
         function stopDrawing() {
             isDrawing = false;
-            
-            // 서명 완료 후 페이지 스크롤 복원
-            document.body.style.overflow = '';
         }
-
-        function handleTouch(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (e.type === 'touchstart' || e.type === 'touchmove') {
-                const touch = e.touches[0] || e.changedTouches[0];
-                if (!touch) return;
-                
-                const mouseEvent = {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                };
-                
-                if (e.type === 'touchstart') {
-                    startDrawing(mouseEvent);
-                } else if (e.type === 'touchmove') {
-                    draw(mouseEvent);
-                }
-            } else if (e.type === 'touchend') {
-                stopDrawing();
-            }
-        }
-
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing, { passive: false });
         function clearSignature() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             hasSignature = false;
-            
-            // 스타일 재설정
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
         }
-        
-        // 탭 닫기 함수
-        function closeTab() {
-            let confirmed = true;
-            
-            // 서명이 필요한 상태에서만 확인 메시지 표시
-            <?php if ($need_signature && !isset($signature_success)): ?>
-            confirmed = confirm('서명하지 않고 사진 확인을 종료하시겠습니까?');
-            <?php endif; ?>
-            
-            if (confirmed) {
-                // 세션 삭제
-                clearSession();
-                
-                try {
-                    window.close();
-                    // window.close()가 작동하지 않는 경우를 대비한 안내
-                    setTimeout(function() {
-                        alert('브라우저 설정으로 인해 자동으로 탭을 닫을 수 없습니다.\n수동으로 탭을 닫아주세요.');
-                    }, 100);
-                } catch (e) {
-                    alert('브라우저 설정으로 인해 자동으로 탭을 닫을 수 없습니다.\n수동으로 탭을 닫아주세요.');
-                }
-            }
-        }
-
-        // 폼 제출 시 서명 데이터 저장
         document.getElementById('signatureForm').addEventListener('submit', function(e) {
             if (!hasSignature) {
                 e.preventDefault();
                 alert('서명을 해주세요.');
                 return;
             }
-            
             const signatureData = canvas.toDataURL();
             document.getElementById('signatureData').value = signatureData;
-            
-            // 서명 완료 후 폼 제출 전 세션 삭제 (비동기)
-            clearSession();
         });
         <?php endif; ?>
         
@@ -1136,9 +1049,6 @@ if ($need_signature) {
         <?php if ($show_limited_view): ?>
         // 탭 닫기 함수 (제한된 뷰용)
         function closeTab() {
-            // 세션 삭제
-            clearSession();
-            
             try {
                 window.close();
                 // window.close()가 작동하지 않는 경우를 대비한 안내
@@ -1150,6 +1060,105 @@ if ($need_signature) {
             }
         }
         <?php endif; ?>
+
+        // 서명 전화번호 입력 필드 초기화 및 이벤트 설정
+        function initializeSignerPhoneInputs() {
+            const hiddenInput = document.getElementById('signer_phone');
+            const input1 = document.getElementById('signer_phone_1');
+            const input2 = document.getElementById('signer_phone_2');
+            const input3 = document.getElementById('signer_phone_3');
+            // 기존 값이 있으면 분리해서 표시
+            if (hiddenInput && hiddenInput.value) {
+                const parts = hiddenInput.value.split('-');
+                if (parts.length >= 3) {
+                    input1.value = parts[0];
+                    input2.value = parts[1];
+                    input3.value = parts[2];
+                }
+            }
+            // 입력 이벤트 설정
+            [input1, input2, input3].forEach((input, index) => {
+                input.addEventListener('input', function(e) {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                    
+                    // 다음 필드로 자동 이동
+                    if (index === 0) {
+                        // 첫 번째 필드 (국번)
+                        const areaCode = this.value;
+                        
+                        // 02가 입력되면 바로 두 번째 필드로 이동
+                        if (areaCode === '02') {
+                            input2.focus();
+                        }
+                        // 최대 길이에 도달하면 두 번째 필드로 이동
+                        else if (this.value.length >= this.maxLength) {
+                            input2.focus();
+                        }
+                        
+                        // 국번이 변경되면 두 번째 필드의 maxlength 조정
+                        if (areaCode === '02') {
+                            input2.maxLength = 4; // 서울도 4자리까지 허용
+                        } else {
+                            input2.maxLength = 4;
+                        }
+                    } else if (index === 1) {
+                        // 두 번째 필드 (중간 번호)
+                        const areaCode = input1.value;
+                        const currentLength = this.value.length;
+                        
+                        // 010인 경우 4자리가 채워졌을 때만 세 번째 필드로 이동
+                        if (areaCode === '010' && currentLength >= 4) {
+                            input3.focus();
+                        }
+                        // 다른 지역번호의 경우 3자리 또는 4자리에서 이동
+                        else if (areaCode !== '010') {
+                            if (currentLength >= 4) {
+                                input3.focus();
+                            } else if (currentLength === 3) {
+                                setTimeout(() => {
+                                    if (this.value.length === 3 && document.activeElement === this) {
+                                        input3.focus();
+                                    }
+                                }, 1000);
+                            }
+                        }
+                    }
+                    
+                    // hidden 필드 업데이트
+                    updateHiddenSignerPhoneField(input1, input2, input3);
+                });
+                // 백스페이스로 이전 필드로 이동
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                        [input1, input2, input3][index - 1].focus();
+                    }
+                });
+            });
+        }
+        function updateHiddenSignerPhoneField(input1, input2, input3) {
+            const hiddenInput = document.getElementById('signer_phone');
+            const value1 = input1.value.trim();
+            const value2 = input2.value.trim();
+            const value3 = input3.value.trim();
+            if (value1 || value2 || value3) {
+                hiddenInput.value = `${value1}-${value2}-${value3}`;
+            } else {
+                hiddenInput.value = '';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSignerPhoneInputs();
+        });
+        // 폼 제출 시 signer_phone 값 조합
+        const signatureForm = document.getElementById('signatureForm');
+        if (signatureForm) {
+            signatureForm.addEventListener('submit', function(e) {
+                const input1 = document.getElementById('signer_phone_1');
+                const input2 = document.getElementById('signer_phone_2');
+                const input3 = document.getElementById('signer_phone_3');
+                updateHiddenSignerPhoneField(input1, input2, input3);
+            });
+        }
     </script>
 </body>
 </html> 

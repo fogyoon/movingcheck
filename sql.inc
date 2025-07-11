@@ -54,8 +54,6 @@ function create_all_tables() {
     try {
         $sql = "
         SET FOREIGN_KEY_CHECKS=0;
-        DROP TABLE IF EXISTS photo_comparisons;
-        DROP TABLE IF EXISTS damage_reports;
         DROP TABLE IF EXISTS signatures;
         DROP TABLE IF EXISTS photos;
         DROP TABLE IF EXISTS contracts;
@@ -80,6 +78,7 @@ function create_all_tables() {
           id INT AUTO_INCREMENT PRIMARY KEY,
           address VARCHAR(255),
           detail_address VARCHAR(128),
+          category VARCHAR(32),
           description TEXT,
           is_public BOOLEAN DEFAULT FALSE,
           is_admin_created BOOLEAN DEFAULT FALSE,
@@ -199,42 +198,23 @@ function create_all_tables() {
           FOREIGN KEY (contract_id) REFERENCES contracts(id)
         );
 
-        CREATE TABLE damage_reports (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          contract_id INT,
-          photo_id INT,
-          description TEXT,
-          status ENUM('requested','in_progress','completed') DEFAULT 'requested',
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (contract_id) REFERENCES contracts(id),
-          FOREIGN KEY (photo_id) REFERENCES photos(id)
-        );
 
-        CREATE TABLE photo_comparisons (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          contract_id INT,
-          before_photo INT,
-          after_photo INT,
-          result TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (contract_id) REFERENCES contracts(id),
-          FOREIGN KEY (before_photo) REFERENCES photos(id),
-          FOREIGN KEY (after_photo) REFERENCES photos(id)
-        );
 
         CREATE TABLE user_activities (
           id INT AUTO_INCREMENT PRIMARY KEY,
           user_id INT,
           login_id VARCHAR(64),
           contract_id INT,
-          activity_type ENUM('login','logout','create_property','update_property','delete_property','create_contract','update_contract','delete_contract','upload_photo','delete_photo','create_signature','create_damage_report','update_damage_report','view_property','view_contract','other') NOT NULL,
+          property_id INT,
+          activity_type ENUM('login','logout','create_property','update_property','delete_property','create_contract','update_contract','delete_contract','upload_photo','delete_photo','create_signature','view_property','view_contract','other') NOT NULL,
           description TEXT,
           ip_address VARCHAR(45),
           user_agent TEXT,
           session_id VARCHAR(255),
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-          FOREIGN KEY (contract_id) REFERENCES contracts(id) ON DELETE SET NULL
+          FOREIGN KEY (contract_id) REFERENCES contracts(id) ON DELETE SET NULL,
+          FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE SET NULL
         );
         ";
         foreach (explode(';', $sql) as $stmt) {
@@ -300,7 +280,7 @@ function create_sample_data() {
 }
 
 // 사용자 활동 기록 함수
-function log_user_activity($user_id, $activity_type, $description = '', $contract_id = null, $session_id = null) {
+function log_user_activity($user_id, $activity_type, $description = '', $contract_id = null, $property_id = null, $session_id = null) {
     $pdo = get_pdo();
     if (is_string($pdo)) {
         return false; // DB 연결 오류
@@ -320,9 +300,9 @@ function log_user_activity($user_id, $activity_type, $description = '', $contrac
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($row) $login_id = $row['login_id'];
         }
-        $sql = "INSERT INTO user_activities (user_id, login_id, contract_id, activity_type, description, ip_address, user_agent, session_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO user_activities (user_id, login_id, contract_id, property_id, activity_type, description, ip_address, user_agent, session_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$user_id, $login_id, $contract_id, $activity_type, $description, $ip_address, $user_agent, $session_id]);
+        $stmt->execute([$user_id, $login_id, $contract_id, $property_id, $activity_type, $description, $ip_address, $user_agent, $session_id]);
         return true;
     } catch (PDOException $e) {
         error_log('사용자 활동 기록 실패: ' . $e->getMessage());
@@ -660,6 +640,153 @@ function validate_form_data($data, $rules) {
         'valid' => $is_valid,
         'data' => $validated_data,
         'errors' => $errors
+    ];
+}
+
+/**
+ * 계약과 관련된 모든 데이터를 삭제하는 함수
+ * @param int $contract_id 삭제할 계약 ID
+ * @return array ['success' => bool, 'deleted_files' => int, 'deleted_signatures' => int, 'deleted_photos' => int, 'message' => string]
+ */
+function delete_contract_with_related_data($contract_id) {
+    $pdo = get_pdo();
+    if (is_string($pdo)) {
+        return ['success' => false, 'message' => $pdo];
+    }
+    
+    try {
+        // 트랜잭션 시작
+        $pdo->beginTransaction();
+        
+        $deleted_files = 0;
+        $deleted_signatures = 0;
+        $deleted_photos = 0;
+        
+        // 1. 사진 파일들 물리적 삭제를 위해 파일 경로 수집
+        $photo_paths = [];
+        $stmt = $pdo->prepare('SELECT * FROM photos WHERE contract_id = ?');
+        $stmt->execute([$contract_id]);
+        $photos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach ($photos as $photo) {
+            // 입주 사진 파일 경로들 수집
+            for ($i = 1; $i <= 6; $i++) {
+                $file_path = $photo["movein_file_path_0{$i}"];
+                if (!empty($file_path) && file_exists($file_path)) {
+                    $photo_paths[] = $file_path;
+                }
+            }
+            
+            // 퇴거 사진 파일 경로들 수집  
+            for ($i = 1; $i <= 6; $i++) {
+                $file_path = $photo["moveout_file_path_0{$i}"];
+                if (!empty($file_path) && file_exists($file_path)) {
+                    $photo_paths[] = $file_path;
+                }
+            }
+        }
+        
+        // 2. 물리적 사진 파일들 삭제
+        foreach ($photo_paths as $file_path) {
+            if (unlink($file_path)) {
+                $deleted_files++;
+            }
+        }
+        
+        // 3. signatures 테이블에서 관련 레코드 삭제
+        $stmt = $pdo->prepare('DELETE FROM signatures WHERE contract_id = ?');
+        $stmt->execute([$contract_id]);
+        $deleted_signatures = $stmt->rowCount();
+        
+        // 4. photos 테이블에서 관련 레코드 삭제  
+        $stmt = $pdo->prepare('DELETE FROM photos WHERE contract_id = ?');
+        $stmt->execute([$contract_id]);
+        $deleted_photos = $stmt->rowCount();
+        
+        // 5. contracts 테이블에서 계약 삭제
+        $stmt = $pdo->prepare('DELETE FROM contracts WHERE id = ?');
+        $stmt->execute([$contract_id]);
+        $deleted_contracts = $stmt->rowCount();
+        
+        // 트랜잭션 커밋
+        $pdo->commit();
+        
+        if ($deleted_contracts > 0) {
+            return [
+                'success' => true,
+                'deleted_files' => $deleted_files,
+                'deleted_signatures' => $deleted_signatures, 
+                'deleted_photos' => $deleted_photos,
+                'message' => "계약 ID {$contract_id}와 관련된 모든 데이터가 성공적으로 삭제되었습니다. (사진파일: {$deleted_files}개, 서명: {$deleted_signatures}개, 사진레코드: {$deleted_photos}개)"
+            ];
+        } else {
+            return [
+                'success' => false,
+                'deleted_files' => 0,
+                'deleted_signatures' => 0,
+                'deleted_photos' => 0,
+                'message' => "계약 ID {$contract_id}를 찾을 수 없습니다."
+            ];
+        }
+        
+    } catch (PDOException $e) {
+        // 트랜잭션 롤백
+        $pdo->rollBack();
+        return [
+            'success' => false,
+            'deleted_files' => 0,
+            'deleted_signatures' => 0, 
+            'deleted_photos' => 0,
+            'message' => '계약 삭제 중 오류가 발생했습니다: ' . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * 여러 계약을 한번에 삭제하는 함수
+ * @param array $contract_ids 삭제할 계약 ID 배열
+ * @return array ['success' => bool, 'total_deleted_files' => int, 'total_deleted_signatures' => int, 'total_deleted_photos' => int, 'results' => array, 'message' => string]
+ */
+function delete_multiple_contracts($contract_ids) {
+    if (!is_array($contract_ids) || empty($contract_ids)) {
+        return [
+            'success' => false,
+            'total_deleted_files' => 0,
+            'total_deleted_signatures' => 0,
+            'total_deleted_photos' => 0,
+            'results' => [],
+            'message' => '삭제할 계약 ID가 제공되지 않았습니다.'
+        ];
+    }
+    
+    $results = [];
+    $total_deleted_files = 0;
+    $total_deleted_signatures = 0;
+    $total_deleted_photos = 0;
+    $success_count = 0;
+    
+    foreach ($contract_ids as $contract_id) {
+        $result = delete_contract_with_related_data($contract_id);
+        $results[] = $result;
+        
+        if ($result['success']) {
+            $success_count++;
+            $total_deleted_files += $result['deleted_files'];
+            $total_deleted_signatures += $result['deleted_signatures'];
+            $total_deleted_photos += $result['deleted_photos'];
+        }
+    }
+    
+    $total_count = count($contract_ids);
+    $overall_success = $success_count === $total_count;
+    
+    return [
+        'success' => $overall_success,
+        'total_deleted_files' => $total_deleted_files,
+        'total_deleted_signatures' => $total_deleted_signatures,
+        'total_deleted_photos' => $total_deleted_photos,
+        'results' => $results,
+        'message' => "{$total_count}개 계약 중 {$success_count}개가 성공적으로 삭제되었습니다. (총 사진파일: {$total_deleted_files}개, 서명: {$total_deleted_signatures}개, 사진레코드: {$total_deleted_photos}개)"
     ];
 }
 

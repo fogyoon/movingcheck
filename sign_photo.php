@@ -64,10 +64,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sign_image'])) {
             $_SERVER['REMOTE_ADDR'] ?? ''
         ]);
         
-        // 임대인이 입주 사진에 서명한 경우 contract status 업데이트
-        if ($signer_role === 'landlord' && $purpose === 'movein') {
-            $update_stmt = $pdo->prepare("UPDATE contracts SET status = 'movein_landlord_signed' WHERE id = ?");
-            $update_stmt->execute([$contract_id]);
+        // 역할/단계에 따라 계약 상태 업데이트
+        $new_status = '';
+        if ($status === 'movein_photo' && $signer_role === 'landlord') {
+            $new_status = 'movein_landlord_signed';
+        } elseif ($status === 'movein_landlord_signed' && $signer_role === 'tenant') {
+            $new_status = 'movein_tenant_signed';
+        } elseif ($status === 'moveout_photo' && $signer_role === 'landlord') {
+            $new_status = 'moveout_landlord_signed';
+        } elseif ($status === 'moveout_landlord_signed' && $signer_role === 'tenant') {
+            $new_status = 'moveout_tenant_signed';
+        }
+        if ($new_status) {
+            $update_stmt = $pdo->prepare("UPDATE contracts SET status = ? WHERE id = ?");
+            $update_stmt->execute([$new_status, $contract_id]);
         }
         
         // 활동 로그 기록
@@ -130,80 +140,101 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sign_image'])) {
 </main>
 <?php include 'footer.inc'; ?>
 <script>
-// 서명 패드 구현
+// 서명 패드 구현 (signature_test.php/secure_view.php 방식 적용)
 const canvas = document.getElementById('signPad');
 if (canvas) {
   const ctx = canvas.getContext('2d');
-  let drawing = false, lastX = 0, lastY = 0;
-  function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = canvas.offsetWidth * dpr;
-    canvas.height = canvas.offsetHeight * dpr;
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+  let drawing = false, lastX = 0, lastY = 0, hasSignature = false;
+
+  // 캔버스 내용 보존 및 복원
+  function preserveCanvasContent() {
+    if (canvas.width > 0 && canvas.height > 0) {
+      return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+    return null;
   }
-  window.addEventListener('resize', resizeCanvas);
+  function restoreCanvasContent(imageData) {
+    if (imageData && hasSignature) {
+      try {
+        ctx.putImageData(imageData, 0, 0);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  }
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const savedImageData = preserveCanvasContent();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#1976d2';
+    ctx.lineWidth = 2.5;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    restoreCanvasContent(savedImageData);
+  }
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resizeCanvas, 150);
+  });
   resizeCanvas();
+  function getXY(e) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const scaleX = (canvas.width / dpr) / rect.width;
+    const scaleY = (canvas.height / dpr) / rect.height;
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return [
+      (clientX - rect.left) * scaleX,
+      (clientY - rect.top) * scaleY
+    ];
+  }
   function startDraw(e) {
     e.preventDefault();
     e.stopPropagation();
     drawing = true;
     [lastX, lastY] = getXY(e);
-    
-    // 서명 중 페이지 스크롤 방지
-    document.body.style.overflow = 'hidden';
-  }
-  function endDraw() { 
-    drawing = false; 
-    
-    // 서명 완료 후 페이지 스크롤 복원
-    document.body.style.overflow = '';
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
   }
   function draw(e) {
     if (!drawing) return;
     e.preventDefault();
     e.stopPropagation();
-    
     const [x, y] = getXY(e);
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#1976d2';
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
     ctx.stroke();
     [lastX, lastY] = [x, y];
+    hasSignature = true;
   }
-  function getXY(e) {
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    
-    // 실제 canvas 크기와 표시되는 크기의 비율을 고려
-    const scaleX = (canvas.width / dpr) / rect.width;
-    const scaleY = (canvas.height / dpr) / rect.height;
-    
-    if (e.touches && e.touches.length) {
-      return [
-        (e.touches[0].clientX - rect.left) * scaleX,
-        (e.touches[0].clientY - rect.top) * scaleY
-      ];
-    } else {
-      return [
-        (e.clientX - rect.left) * scaleX,
-        (e.clientY - rect.top) * scaleY
-      ];
-    }
+  function endDraw() {
+    drawing = false;
   }
   canvas.addEventListener('mousedown', startDraw);
-  canvas.addEventListener('touchstart', startDraw, { passive: false });
   canvas.addEventListener('mousemove', draw);
-  canvas.addEventListener('touchmove', draw, { passive: false });
   canvas.addEventListener('mouseup', endDraw);
   canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove', draw, { passive: false });
   canvas.addEventListener('touchend', endDraw, { passive: false });
   document.getElementById('clearBtn').onclick = function() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSignature = false;
   };
   document.getElementById('signForm').onsubmit = function(e) {
     e.preventDefault();

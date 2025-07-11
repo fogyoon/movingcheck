@@ -19,17 +19,19 @@ require_once 'config.inc';
         <a href="admin.php" class="mc-login-link">관리자</a>
         <a href="user_activities.php" class="mc-login-link">활동기록</a>
         <a href="develop.php" class="mc-login-link">개발도구</a>
-        <a href="#" onclick="openInquiryModal(); return false;" class="mc-login-link">문의하기</a>
         <a href="logout.php" class="mc-login-link">로그아웃</a>
+        <a href="#" onclick="openInquiryModal(); return false;" class="mc-login-link">문의하기</a>
       <?php else: ?>
         <a href="properties.php" class="mc-login-link">내 임대물</a>
-        <a href="#" onclick="openInquiryModal(); return false;" class="mc-login-link">문의하기</a>
+        <a href="profile_setup.php" class="mc-login-link">내정보 변경</a>
         <a href="logout.php" class="mc-login-link">로그아웃</a>
+        <a href="#" onclick="openInquiryModal(); return false;" class="mc-login-link">문의하기</a>
       <?php endif; ?>
     <?php else: ?>
-      <a href="#" onclick="openInquiryModal(); return false;" class="mc-login-link">문의하기</a>
       <a href="login.php" class="mc-login-link">로그인</a>
-    <?php endif; ?>
+      <a href="login.php" class="mc-login-link">임대물 등록/확인</a>
+      <a href="#" onclick="openInquiryModal(); return false;" class="mc-login-link">문의하기</a>
+      <?php endif; ?>
   </nav>
   <nav class="mc-mobile-menu" id="mc-mobile-menu" style="display:none;">
     <?php if ($isLoggedIn): ?>
@@ -41,6 +43,7 @@ require_once 'config.inc';
         <a href="logout.php" class="mc-login-link">로그아웃</a>
       <?php else: ?>
         <a href="properties.php" class="mc-login-link">내 임대물</a>
+        <a href="profile_setup.php" class="mc-login-link">내정보 변경</a>
         <a href="#" onclick="openInquiryModal(); return false;" class="mc-login-link">문의하기</a>
         <a href="logout.php" class="mc-login-link">로그아웃</a>
       <?php endif; ?>

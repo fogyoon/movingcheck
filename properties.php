@@ -1,5 +1,6 @@
 <?php
 require_once 'sql.inc';
+require_once 'config.inc';
 
 // 로그인 확인 - 로그인되지 않은 경우 login.php로 리다이렉트
 if (!isset($_SESSION['user_id'])) {
@@ -16,11 +17,26 @@ if (isset($_SESSION['success_msg'])) {
     unset($_SESSION['success_msg']); // 한 번 표시 후 삭제
 }
 $search = safe_string($_GET['search'] ?? '', 100);
+$category_filter = $_GET['category'] ?? '';
+if (!in_array($category_filter, PROPERTY_CATEGORY)) {
+    $category_filter = '';
+}
 $pdo = get_pdo();
-if ($search) {
-    $stmt = $pdo->prepare("SELECT p.*, MAX(c.end_date) AS latest_contract_date FROM properties p LEFT JOIN contracts c ON p.id = c.property_id WHERE p.created_by = ? AND (p.address LIKE ? OR p.detail_address LIKE ? OR p.description LIKE ?) GROUP BY p.id ORDER BY latest_contract_date DESC, p.created_at DESC");
-    $like = safe_like_pattern($search);
-    $stmt->execute([$user_id, $like, $like, $like]);
+if ($search || $category_filter) {
+    $sql = "SELECT p.*, MAX(c.end_date) AS latest_contract_date FROM properties p LEFT JOIN contracts c ON p.id = c.property_id WHERE p.created_by = ?";
+    $params = [$user_id];
+    if ($search) {
+        $sql .= " AND (p.address LIKE ? OR p.detail_address LIKE ? OR p.description LIKE ?)";
+        $like = safe_like_pattern($search);
+        $params[] = $like; $params[] = $like; $params[] = $like;
+    }
+    if ($category_filter && in_array($category_filter, PROPERTY_CATEGORY)) {
+        $sql .= " AND p.category = ?";
+        $params[] = $category_filter;
+    }
+    $sql .= " GROUP BY p.id ORDER BY latest_contract_date DESC, p.created_at DESC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
 } else {
     $stmt = $pdo->prepare("SELECT p.*, MAX(c.end_date) AS latest_contract_date FROM properties p LEFT JOIN contracts c ON p.id = c.property_id WHERE p.created_by = ? GROUP BY p.id ORDER BY latest_contract_date DESC, p.created_at DESC");
     $stmt->execute([$user_id]);
@@ -61,45 +77,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_property_id'])
         echo json_encode(['result'=>'fail','msg'=>'권한이 없거나 이미 삭제된 임대물입니다.']);
         exit;
     }
-    // 관련 계약 id 목록
+    // 관련 계약 id 목록 수집
     $cids = [];
     $cstmt = $pdo->prepare("SELECT id FROM contracts WHERE property_id = ?");
     $cstmt->execute([$pid]);
     foreach ($cstmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $cids[] = $row['id'];
     }
-    // 관련 사진 id 목록
-    $photo_ids = [];
-    if ($cids) {
-        $in = str_repeat('?,', count($cids)-1) . '?';
-        $pstmt = $pdo->prepare("SELECT id FROM photos WHERE contract_id IN ($in)");
-        $pstmt->execute($cids);
-        foreach ($pstmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $photo_ids[] = $row['id'];
+    
+    // 계약들과 관련된 모든 데이터 삭제 (delete_multiple_contracts 함수 사용)
+    $deletion_msg = '';
+    if (!empty($cids)) {
+        $deletion_result = delete_multiple_contracts($cids);
+        // 일부만 삭제되어도 성공으로 간주, 단 아무것도 삭제되지 않으면 오류
+        if ($deletion_result['total_deleted_signatures'] == 0 && $deletion_result['total_deleted_photos'] == 0 && $deletion_result['total_deleted_files'] == 0) {
+            echo json_encode(['result'=>'fail','msg'=>'관련 계약 삭제 중 오류: ' . $deletion_result['message']]);
+            exit;
         }
+        $deletion_msg = ' (계약 ' . count($cids) . '개, 파일 ' . $deletion_result['total_deleted_files'] . '개, 서명 ' . $deletion_result['total_deleted_signatures'] . '개, 사진 ' . $deletion_result['total_deleted_photos'] . '개 삭제)';
     }
-    // 삭제 순서: photo_comparisons, damage_reports, signatures, photos, contracts, properties
-    if ($cids) {
-        $in = str_repeat('?,', count($cids)-1) . '?';
-        $pdo->prepare("DELETE FROM photo_comparisons WHERE contract_id IN ($in)")->execute($cids);
-        $pdo->prepare("DELETE FROM damage_reports WHERE contract_id IN ($in)")->execute($cids);
-        $pdo->prepare("DELETE FROM signatures WHERE contract_id IN ($in)")->execute($cids);
-    }
-    if ($photo_ids) {
-        $in = str_repeat('?,', count($photo_ids)-1) . '?';
-        $pdo->prepare("DELETE FROM photo_comparisons WHERE before_photo IN ($in) OR after_photo IN ($in)")->execute($photo_ids);
-        $pdo->prepare("DELETE FROM damage_reports WHERE photo_id IN ($in)")->execute($photo_ids);
-        $pdo->prepare("DELETE FROM photos WHERE id IN ($in)")->execute($photo_ids);
-    }
-    if ($cids) {
-        $in = str_repeat('?,', count($cids)-1) . '?';
-        $pdo->prepare("DELETE FROM contracts WHERE id IN ($in)")->execute($cids);
-    }
+    
     // 임대물 삭제
     $pdo->prepare("DELETE FROM properties WHERE id = ?")->execute([$pid]);
+    
     // 로그 기록
-    log_user_activity($user_id, 'delete_property', '임대물(ID:'.$pid.') 및 관련 데이터 삭제', null);
-    echo json_encode(['result'=>'ok']);
+    log_user_activity($user_id, 'delete_property', '임대물(ID:'.$pid.') 및 관련 데이터 삭제' . $deletion_msg, null, $pid);
+    echo json_encode(['result'=>'ok','msg'=>'임대물이 성공적으로 삭제되었습니다.' . $deletion_msg]);
     exit;
 }
 ?>
@@ -108,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_property_id'])
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>내 임대물 목록 - <?php echo SITE_TITLE; ?></title>
+  <title>임대물 목록 - <?php echo SITE_TITLE; ?></title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -317,50 +320,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_property_id'])
     </script>
   <?php endif; ?>
   
-  <div class="page-header">
-    <h1 class="page-title">
-      <img src="images/house-icon.svg" alt="집" style="width: 32px; height: 32px; margin-right: 12px; vertical-align: middle;">내 임대물 목록
-    </h1>
-    <a href="properties_edit.php" class="btn btn-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-      </svg>
-      새 임대물 등록
-    </a>
-  </div>
-  
-  <?php if ($success_msg): ?>
-    <div style="background: #e3fcec; color: #197d4c; border: 1px solid #b2f2d7; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; text-align: center; font-size: 1.05rem; font-weight: 600;">
-      <?php echo htmlspecialchars($success_msg); ?>
+  <div class="prop-container">
+    <div class="page-header">
+        <div class="page-title">임대물 목록</div>
+        <a href="properties_edit.php" class="btn btn-primary">+ 새 임대물 등록</a>
     </div>
-  <?php endif; ?>
+    <?php if ($success_msg): ?>
+        <div class="success-msg"><?php echo htmlspecialchars($success_msg); ?></div>
+    <?php endif; ?>
+
+    <!-- 부동산 유형 선택 (검색보다 위) -->
+    <form method="get" id="categoryForm" style="margin-bottom: 1.2rem;">
+        <label for="category" style="font-weight:600; margin-right:0.7rem;">부동산 유형</label>
+        <select name="category" id="category" style="padding:0.5rem 1.2rem; border-radius:8px; border:1.5px solid #e3eaf2; font-size:1rem; min-width:180px;" onchange="document.getElementById('categoryForm').submit();">
+            <option value="">모두(All)</option>
+            <?php foreach (PROPERTY_CATEGORY as $cat): ?>
+                <option value="<?php echo htmlspecialchars($cat); ?>" <?php if ($category_filter === $cat) echo 'selected'; ?>><?php echo htmlspecialchars($cat); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </form>
+
+    <!-- 검색 폼 (유형 선택과 독립) -->
+    <form class="prop-search-form" method="get" autocomplete="off" style="margin-bottom:2.2rem;">
+        <?php if ($category_filter): ?>
+            <input type="hidden" name="category" value="<?php echo htmlspecialchars($category_filter); ?>">
+        <?php endif; ?>
+        <input type="text" name="search" class="prop-search-input" placeholder="주소, 상세주소, 설명 검색" value="<?php echo htmlspecialchars($search); ?>">
+        <button type="submit" class="btn btn-primary prop-search-btn" style="background-color: #1e7e34; border-color: #1e7e34; color: white; padding: 0.5rem 1rem; font-size: 0.9rem;">🔍 검색</button>
+        <?php if ($search): ?>
+            <a href="properties.php<?php echo $category_filter ? '?category=' . urlencode($category_filter) : ''; ?>" class="btn btn-light">초기화</a>
+        <?php endif; ?>
+    </form>
   
-  <?php if (empty($properties) && !$search): ?>
+  <?php if (empty($properties) && !$search && !$category_filter): ?>
     <div style="text-align:center; margin: 4rem 0; padding: 2rem; background: #fff; border-radius: 12px;">
       <h2 style="font-size:1.3rem; margin-bottom:0.5rem;">등록된 임대물이 없습니다.</h2>
       <p style="color:#6c757d; margin-bottom:1.5rem;">아래 버튼을 눌러 첫 임대물을 등록하고 시작해보세요.</p>
       <a href="properties_edit.php" class="btn btn-primary" style="padding: 0.8rem 1.5rem; font-size: 1.1rem;">임대물 등록하기</a>
     </div>
-  <?php else: ?>
-    <form class="prop-search-form" method="get" autocomplete="off">
-      <input type="text" name="search" class="prop-search-input" placeholder="주소, 상세주소, 설명으로 검색..." value="<?php echo htmlspecialchars($search); ?>">
-      <button type="submit" class="btn btn-primary prop-search-btn">검색</button>
-      <?php if ($search): ?>
-        <a href="properties.php" class="btn btn-light">초기화</a>
-      <?php endif; ?>
-    </form>
-
-    <?php if (empty($properties) && $search): ?>
-      <div style="text-align:center; margin: 4rem 0; padding: 2rem; background: #fff; border-radius: 12px;">
-        <h2 style="font-size:1.3rem; margin-bottom:0.5rem;">'<?php echo htmlspecialchars($search); ?>'에 대한 검색 결과가 없습니다.</h2>
-        <p style="color:#6c757d;">다른 검색어로 다시 시도해보세요.</p>
-      </div>
-    <?php else: ?>
-      <!-- PC 테이블 -->
+<?php else: ?>
+    <!-- PC 테이블 -->
       <div class="prop-table-wrap">
         <table class="prop-table">
           <thead>
             <tr>
+              <th>부동산 유형</th>
               <th>주소</th>
               <th>설명</th>
               <th style="text-align:center;">진행중인 계약</th>
@@ -371,11 +375,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_property_id'])
           <tbody>
             <?php foreach ($properties as $p): ?>
               <tr>
+                <td><?php echo htmlspecialchars($p['category'] ?? ''); ?></td>
                 <td>
                   <div class="prop-address"><?php echo htmlspecialchars($p['address']); ?></div>
                   <small style="color:#6c757d;"><?php echo htmlspecialchars($p['detail_address']); ?></small>
                 </td>
-                <td style="font-size:0.95rem; color:#495057; max-width: 250px; white-space: normal; word-break: break-all;"><?php echo htmlspecialchars($p['description']); ?></td>
+                <td style="font-size:0.97rem; color:#495057; max-width: 250px; white-space: normal; word-break: break-all;"><?php echo nl2br(htmlspecialchars($p['description'])); ?></td>
                 <td style="text-align:center; font-weight:700; color:#0064FF;"><?php echo $contract_counts[$p['id']] ?? 0; ?></td>
                 <td style="font-size:0.95em; color:#6c757d; white-space:nowrap;"><?php echo date('Y-m-d', strtotime($p['created_at'])); ?></td>
                 <td>
@@ -387,12 +392,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_property_id'])
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
                     </button>
                     <?php if (($total_contract_counts[$p['id']] ?? 0) > 0): ?>
-                      <a class="btn btn-light" href="contracts.php?property_id=<?php echo $p['id']; ?>">
+                      <a class="btn <?php echo ($contract_counts[$p['id']] ?? 0) > 0 ? 'btn-primary' : 'btn-light'; ?>" href="contracts.php?property_id=<?php echo $p['id']; ?>">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/><path d="M1 9.5A1.5 1.5 0 0 1 2.5 8h3A1.5 1.5 0 0 1 7 9.5v3A1.5 1.5 0 0 1 5.5 14h-3A1.5 1.5 0 0 1 1 12.5v-3zM2.5 9a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/><path d="M9 2.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zM10.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm-1 7.5A1.5 1.5 0 0 1 10.5 8h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 12.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/></svg>
                         계약 확인
                       </a>
                     <?php endif; ?>
-                    <a class="btn btn-primary" href="contract_edit.php?property_id=<?php echo $p['id']; ?>">
+                    <a class="btn <?php echo ($contract_counts[$p['id']] ?? 0) > 0 ? 'btn-light' : 'btn-primary'; ?> contract-register-btn" href="contract_edit.php?property_id=<?php echo $p['id']; ?>" data-has-contract="<?php echo ($contract_counts[$p['id']] ?? 0) > 0 ? '1' : '0'; ?>">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
                       계약 등록
                     </a>
@@ -437,12 +442,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_property_id'])
               </div>
               <div class="prop-actions">
                   <?php if (($total_contract_counts[$p['id']] ?? 0) > 0): ?>
-                    <a class="btn btn-light" href="contracts.php?property_id=<?php echo $p['id']; ?>">
+                    <a class="btn <?php echo ($contract_counts[$p['id']] ?? 0) > 0 ? 'btn-primary' : 'btn-light'; ?>" href="contracts.php?property_id=<?php echo $p['id']; ?>">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/><path d="M1 9.5A1.5 1.5 0 0 1 2.5 8h3A1.5 1.5 0 0 1 7 9.5v3A1.5 1.5 0 0 1 5.5 14h-3A1.5 1.5 0 0 1 1 12.5v-3zM2.5 9a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/><path d="M9 2.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zM10.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm-1 7.5A1.5 1.5 0 0 1 10.5 8h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 12.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/></svg>
                       계약 확인
                     </a>
                   <?php endif; ?>
-                  <a class="btn btn-primary" href="contract_edit.php?property_id=<?php echo $p['id']; ?>">
+                  <a class="btn <?php echo ($contract_counts[$p['id']] ?? 0) > 0 ? 'btn-light' : 'btn-primary'; ?> contract-register-btn" href="contract_edit.php?property_id=<?php echo $p['id']; ?>" data-has-contract="<?php echo ($contract_counts[$p['id']] ?? 0) > 0 ? '1' : '0'; ?>">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
                     계약 등록
                   </a>
@@ -451,8 +456,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_property_id'])
           </div>
         <?php endforeach; ?>
       </div>
-    <?php endif; ?>
-  <?php endif; ?>
+<?php endif; ?>
 </main>
 <div id="delete-modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; display:flex; opacity:0; visibility:hidden; transition: opacity 0.2s, visibility 0.2s;">
   <div style="background:#fff; border-radius:14px; box-shadow:0 4px 24px rgba(0,0,0,0.13); padding:2rem 1.5rem; max-width:90vw; width:360px; text-align:center; transform: scale(0.95); transition: transform 0.2s;">
@@ -464,12 +468,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_property_id'])
     </div>
   </div>
 </div>
+
+<div id="contract-modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; display:flex; opacity:0; visibility:hidden; transition: opacity 0.2s, visibility 0.2s;">
+  <div style="background:#fff; border-radius:14px; box-shadow:0 4px 24px rgba(0,0,0,0.13); padding:2rem 1.5rem; max-width:90vw; width:360px; text-align:center; transform: scale(0.95); transition: transform 0.2s;">
+    <h3 style="font-size:1.2rem; font-weight:700; color:#d32f2f; margin-top:0; margin-bottom:0.5rem;">⚠️ 이중계약 경고</h3>
+    <p style="font-size:1rem; color:#555; margin-bottom:0.5rem;">진행 중인 계약이 이미 있습니다.<br>그래도 새 계약을 등록하겠습니까?</p>
+    <p style="font-size:0.9rem; color:#d32f2f; margin-bottom:1.5rem; font-weight:600;">※ 이중계약은 임대차보호법 위반으로 불법입니다.</p>
+    <div style="display:flex; gap:1rem; justify-content:center;">
+      <button id="contract-modal-cancel" class="btn btn-primary" style="flex:1;">취소</button>
+      <button id="contract-modal-ok" class="btn btn-light" style="flex:1;">계약 등록</button>
+    </div>
+  </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // 검색 버튼 호버 효과
+    const searchBtn = document.querySelector('.prop-search-btn');
+    if (searchBtn) {
+        searchBtn.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#155724';
+            this.style.borderColor = '#155724';
+            this.style.transform = 'translateY(-1px)';
+            this.style.boxShadow = '0 3px 8px rgba(30, 126, 52, 0.3)';
+        });
+        
+        searchBtn.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#1e7e34';
+            this.style.borderColor = '#1e7e34';
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+        
+        searchBtn.addEventListener('click', function() {
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+        });
+    }
+
     const deleteModal = document.getElementById('delete-modal');
     const modalCancel = document.getElementById('modal-cancel');
     const modalOk = document.getElementById('modal-ok');
     let propertyIdToDelete = null;
+
+    const contractModal = document.getElementById('contract-modal');
+    const contractModalCancel = document.getElementById('contract-modal-cancel');
+    const contractModalOk = document.getElementById('contract-modal-ok');
+    let contractUrlToNavigate = null;
 
     document.querySelectorAll('.prop-actions button[data-pid]').forEach(button => {
         button.addEventListener('click', function () {
@@ -515,6 +561,41 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error(err);
             closeModal();
         });
+    });
+
+    // 계약 등록 버튼 클릭 시 확인 메시지
+    document.querySelectorAll('.contract-register-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            const hasContract = this.getAttribute('data-has-contract') === '1';
+            if (hasContract) {
+                e.preventDefault();
+                contractUrlToNavigate = this.href;
+                contractModal.style.opacity = '1';
+                contractModal.style.visibility = 'visible';
+                contractModal.querySelector('div').style.transform = 'scale(1)';
+                // 취소 버튼에 포커스
+                contractModalCancel.focus();
+            }
+        });
+    });
+
+    function closeContractModal() {
+        contractModal.style.opacity = '0';
+        contractModal.style.visibility = 'hidden';
+        contractModal.querySelector('div').style.transform = 'scale(0.95)';
+    }
+
+    contractModalCancel.addEventListener('click', closeContractModal);
+    contractModal.addEventListener('click', function(e) {
+        if (e.target === contractModal) {
+            closeContractModal();
+        }
+    });
+
+    contractModalOk.addEventListener('click', function() {
+        if (contractUrlToNavigate) {
+            window.location.href = contractUrlToNavigate;
+        }
     });
 });
 </script>

@@ -19,12 +19,127 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 ?>
-<footer class="mc-footer">
-  &copy; <?php echo date('Y'); ?> <?php echo SITE_TITLE; ?> | 
-  <a href="#" onclick="openPrivacyModal()" style="color: inherit; text-decoration: underline;">개인정보처리방침</a> | 
-  <a href="#" onclick="openTermsModal()" style="color: inherit; text-decoration: underline;">약관</a> | 
-  <a href="#" onclick="openInquiryModal()" style="color: inherit; text-decoration: underline;">문의하기</a>
+
+
+  <style>
+    /* --- Footer 전체 스타일 --- */
+    .pd-footer {
+      background: #222;
+      padding: 30px 20px;
+      font-size: 14px;
+      color: #eee;
+      line-height: 1.7;
+      border-top: 1px solid #444;
+      letter-spacing: 0.4px;
+    }
+
+    /* 상단 메뉴 영역 */
+    .footer-top {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .footer-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: inline-flex;
+      gap: 30px; /* 링크 간격 2배 */
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-links li a {
+      display: inline-block;
+      padding: 6px 14px;
+      background-color: #2e2e2e; /* 링크 박스 배경 */
+      color: #fff;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 500;
+      letter-spacing: 0.6px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .footer-links li a:hover {
+      background-color: #444;
+      color: #ffcc00;
+    }
+
+    /* 회사 정보 영역 */
+    .footer-info {
+      text-align: center;
+      color: #ccc;
+      letter-spacing: 0.5px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .footer-info p {
+      margin: 6px 0;
+    }
+
+    /* 강조 텍스트 */
+    .footer-info strong {
+      color: #ddd;
+      font-weight: 600;
+    }
+
+    /* 저작권 문구 */
+    .footer-info .copyright {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #888;
+      letter-spacing: 0.4px;
+    }
+
+    /* --- 반응형: 화면 가로가 작아질 때만 한 줄에 한 항목씩 --- */
+    @media (max-width: 600px) {
+      .footer-info p {
+        display: block;
+        white-space: normal;
+        word-break: break-word;
+        margin: 10px 0;
+      }
+
+      /* 상단 메뉴도 세로 정렬 */
+      .footer-links {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .footer-links li a {
+        display: block;
+        padding: 10px 20px;
+      }
+    }
+  </style>
+
+
+
+<footer class="pd-footer">
+  <div class="footer-top">
+    <ul class="footer-links">
+      <li><a href="#" onclick="openPrivacyModal()">개인정보처리방침</a></li>
+      <li><a href="#" onclick="openTermsModal()">이용약관</a></li>
+      <li><a href="#" onclick="openInquiryModal()">문의하기</a></li>
+    </ul>
+  </div>
+
+  <div class="footer-info">
+    <p><strong>상호</strong>: 미소공인중개사사무소 &nbsp;l&nbsp; <strong>대표</strong>: 노상규</p>
+    <p></p>
+    <p><strong>사업자등록번호</strong>: 105-19-37274</p>
+
+    <p><strong>주소</strong>: 서울시 마포구 월드컵북로54길 25, 1층 110호 (상암동, 상암DMC)</p>
+
+
+    <p class="copyright">
+      &copy; <?php echo date('Y'); ?> <?php echo SITE_TITLE; ?>. All rights reserved.
+    </p>
+  </div>
 </footer>
+
 
 <!-- 문의하기 모달 -->
 <div id="inquiryModal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center;">
@@ -60,10 +175,14 @@ if (isset($_SESSION['user_id'])) {
       
       <div style="margin-bottom: 1rem;">
         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333;">연락처</label>
-        <input type="tel" name="inquiry_phone" 
-               style="width: 100%; padding: 0.8rem; border: 2px solid #e9ecef; border-radius: 6px; font-size: 1rem; box-sizing: border-box;"
-               placeholder="010-0000-0000 (선택사항)"
-               value="<?php echo $current_user_info ? htmlspecialchars($current_user_info['phone'] ?? '') : ''; ?>">
+        <div class="phone-input-group">
+          <input type="text" class="phone-input" name="inquiry_phone_1" id="inquiry_phone_1" maxlength="3" inputmode="numeric">
+          <span class="phone-separator">-</span>
+          <input type="text" class="phone-input" name="inquiry_phone_2" id="inquiry_phone_2" maxlength="4" inputmode="numeric">
+          <span class="phone-separator">-</span>
+          <input type="text" class="phone-input" name="inquiry_phone_3" id="inquiry_phone_3" maxlength="4" inputmode="numeric">
+          <input type="hidden" name="inquiry_phone" id="inquiry_phone" value="<?php echo $current_user_info ? htmlspecialchars($current_user_info['phone'] ?? '') : ''; ?>">
+        </div>
       </div>
       
       <div style="margin-bottom: 1rem;">
@@ -172,7 +291,7 @@ if (isset($_SESSION['user_id'])) {
     <div style="line-height: 1.6; color: #444;">
       <h4 style="color: #333; margin-top: 1.5rem; margin-bottom: 0.8rem;">제1조 (목적)</h4>
       <p style="margin-bottom: 1rem;">
-        본 약관은 무빙체크(이하 "회사")가 제공하는 부동산 임대차 계약 분쟁 예방 서비스(이하 "서비스")의 이용조건 및 절차, 회사와 이용자의 권리, 의무, 책임사항과 기타 필요한 사항을 규정함을 목적으로 합니다.
+        본 약관은 무빙체크가 제공하는 부동산 임대차 계약 분쟁 예방 서비스(이하 "서비스")의 이용조건 및 절차, 무빙체크와 이용자의 권리, 의무, 책임사항과 기타 필요한 사항을 규정함을 목적으로 합니다.
       </p>
       
       <h4 style="color: #333; margin-top: 1.5rem; margin-bottom: 0.8rem;">제2조 (서비스의 내용)</h4>
@@ -191,7 +310,7 @@ if (isset($_SESSION['user_id'])) {
         <li>서비스를 부정한 목적으로 이용하지 않을 의무</li>
       </ul>
       
-      <h4 style="color: #333; margin-top: 1.5rem; margin-bottom: 0.8rem;">제4조 (회사의 의무)</h4>
+      <h4 style="color: #333; margin-top: 1.5rem; margin-bottom: 0.8rem;">제4조 (무빙체크의 의무)</h4>
       <ul style="margin-bottom: 1rem; padding-left: 1.2rem;">
         <li>안전하고 지속적인 서비스 제공</li>
         <li>이용자의 개인정보 보호</li>
@@ -212,7 +331,7 @@ if (isset($_SESSION['user_id'])) {
       
       <h4 style="color: #333; margin-top: 1.5rem; margin-bottom: 0.8rem;">제6조 (분쟁해결)</h4>
       <p style="margin-bottom: 1rem;">
-        서비스 이용과 관련하여 회사와 이용자 사이에 분쟁이 발생한 경우, 쌍방간의 협의를 통하여 해결하는 것을 원칙으로 하며, 협의가 이루어지지 않을 경우 관할 법원에서 해결합니다.
+        서비스 이용과 관련하여 무빙체크와 이용자 사이에 분쟁이 발생한 경우, 쌍방간의 협의를 통하여 해결하는 것을 원칙으로 하며, 협의가 이루어지지 않을 경우 관할 법원에서 해결합니다.
       </p>
       
       <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #666;">
@@ -465,4 +584,145 @@ document.getElementById('inquiryForm').addEventListener('submit', function(e) {
   submitBtn.textContent = '발송 중...';
   submitBtn.disabled = true;
 });
+
+function initializeInquiryPhoneInputs() {
+  const hiddenInput = document.getElementById('inquiry_phone');
+  const input1 = document.getElementById('inquiry_phone_1');
+  const input2 = document.getElementById('inquiry_phone_2');
+  const input3 = document.getElementById('inquiry_phone_3');
+  if (hiddenInput && hiddenInput.value) {
+    const parts = hiddenInput.value.split('-');
+    if (parts.length >= 3) {
+      input1.value = parts[0];
+      input2.value = parts[1];
+      input3.value = parts[2];
+    }
+  }
+  [input1, input2, input3].forEach((input, index) => {
+    input.addEventListener('input', function(e) {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      
+      // 다음 필드로 자동 이동
+      if (index === 0) {
+        // 첫 번째 필드 (국번)
+        const areaCode = this.value;
+        
+        // 02가 입력되면 바로 두 번째 필드로 이동
+        if (areaCode === '02') {
+          input2.focus();
+        }
+        // 최대 길이에 도달하면 두 번째 필드로 이동
+        else if (this.value.length >= this.maxLength) {
+          input2.focus();
+        }
+        
+        // 국번이 변경되면 두 번째 필드의 maxlength 조정
+        if (areaCode === '02') {
+          input2.maxLength = 4; // 서울도 4자리까지 허용
+        } else {
+          input2.maxLength = 4;
+        }
+      } else if (index === 1) {
+        // 두 번째 필드 (중간 번호)
+        const areaCode = input1.value;
+        const currentLength = this.value.length;
+        
+        // 010인 경우 4자리가 채워졌을 때만 세 번째 필드로 이동
+        if (areaCode === '010' && currentLength >= 4) {
+          input3.focus();
+        }
+        // 다른 지역번호의 경우 3자리 또는 4자리에서 이동
+        else if (areaCode !== '010') {
+          if (currentLength >= 4) {
+            input3.focus();
+          } else if (currentLength === 3) {
+            setTimeout(() => {
+              if (this.value.length === 3 && document.activeElement === this) {
+                input3.focus();
+              }
+            }, 1000);
+          }
+        }
+      }
+      
+      updateHiddenInquiryPhoneField(input1, input2, input3);
+    });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+        [input1, input2, input3][index - 1].focus();
+      }
+    });
+  });
+}
+
+function updateHiddenInquiryPhoneField(input1, input2, input3) {
+  const hiddenInput = document.getElementById('inquiry_phone');
+  const value1 = input1.value.trim();
+  const value2 = input2.value.trim();
+  const value3 = input3.value.trim();
+  if (value1 || value2 || value3) {
+    hiddenInput.value = `${value1}-${value2}-${value3}`;
+  } else {
+    hiddenInput.value = '';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  initializeInquiryPhoneInputs();
+});
+
+const inquiryForm = document.getElementById('inquiryForm');
+if (inquiryForm) {
+  inquiryForm.addEventListener('submit', function(e) {
+    const input1 = document.getElementById('inquiry_phone_1');
+    const input2 = document.getElementById('inquiry_phone_2');
+    const input3 = document.getElementById('inquiry_phone_3');
+    updateHiddenInquiryPhoneField(input1, input2, input3);
+  });
+}
+
+</script>
+
+<style>
+/* 전화번호 입력 필드 스타일 */
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.phone-input {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  text-align: center;
+  background: #fff;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.phone-separator {
+  font-size: 1.2rem;
+  color: #666;
+  font-weight: 500;
+}
+@media (max-width: 600px) {
+  .phone-input-group {
+    gap: 0.2rem;
+    width: 100%;
+  }
+  .phone-input {
+    padding: 0.5rem 0.2rem;
+    font-size: 0.95rem;
+    max-width: 70px;
+  }
+  .phone-separator {
+    font-size: 0.9rem;
+  }
+}
+</style>
 </script> 

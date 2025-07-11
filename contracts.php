@@ -105,22 +105,31 @@ if (!$property) {
 // 종료된 계약 보기 설정
 $show_finished = isset($_GET['show_finished']) && $_GET['show_finished'] === '1';
 
-// 계약 정보 조회
-$sql = "
-    SELECT c.*
+// 계약 정보 조회 (순서 번호 포함)
+// 먼저 모든 계약의 순서 번호를 계산
+$order_sql = "
+    SELECT c.*, 
+           ROW_NUMBER() OVER (PARTITION BY c.property_id ORDER BY c.created_at ASC) as contract_order
     FROM contracts c
     WHERE c.property_id = ? AND c.user_id = ?
 ";
 
-if (!$show_finished) {
-    $sql .= " AND c.status != 'finished'";
+$order_stmt = $pdo->prepare($order_sql);
+$order_stmt->execute([$property_id, $user_id]);
+$all_contracts = $order_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// 종료된 계약 필터링 (표시 여부에 따라)
+$contracts = [];
+foreach ($all_contracts as $contract) {
+    if ($show_finished || $contract['status'] != 'finished') {
+        $contracts[] = $contract;
+    }
 }
 
-$sql .= " ORDER BY c.created_at DESC";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$property_id, $user_id]);
-$contracts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// 최신 순으로 정렬
+usort($contracts, function($a, $b) {
+    return strtotime($b['created_at']) - strtotime($a['created_at']);
+});
 
 // 전화번호 정규화 함수 (숫자만 추출)
 function normalize_phone($phone) {
@@ -322,7 +331,7 @@ $status_info = [
     ],
     'finished' => [
         'label' => '계약 종료',
-        'phase' => '완료',
+        'phase' => '종료',
         'progress' => 100,
         'buttons' => ['view_details']
     ]
@@ -331,7 +340,7 @@ $status_info = [
 // 상태별 버튼 라벨 매핑
 $photo_button_labels = [
   'empty' => '사진 등록',
-  'movein_photo' => '사진 등록',
+  'movein_photo' => '사진 확인 등록',
   'movein_landlord_signed' => '사진 확인 전송',
   'movein_tenant_signed' => '입주 사진 확인(퇴거 사진 등록)',
   'moveout_photo' => '입주 사진 확인(퇴거 사진 등록)',
@@ -644,9 +653,9 @@ function getStatusBadgeClass($status) {
       border: 1px solid #f8bbd9;
     }
     .status-badge.finished {
-      background-color: #e8f5e8;
-      color: #388e3c;
-      border: 1px solid #c8e6c9;
+      background-color: #f8f9fa;
+      color: #6c757d;
+      border: 1px solid #dee2e6;
     }
 
     /* 토글 스위치 스타일 */
@@ -797,8 +806,11 @@ function getStatusBadgeClass($status) {
           </label>
           <span class="toggle-label">종료된 계약 보기</span>
         </div>
-        <a href="properties.php" class="btn btn-secondary">
-          ← 임대물 목록으로
+        <a href="properties.php" class="btn btn-primary" id="backToListBtn" style="background-color: #6c757d; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3); transition: all 0.2s ease; border: 1px solid #5a6268; font-size: 0.9rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+          </svg>
+          임대물 목록으로
         </a>
       </div>
     </div>
@@ -849,7 +861,7 @@ function getStatusBadgeClass($status) {
               <tr>
                 <td>
                   <div class="contract-info">
-                    계약 #<?php echo $contract['id']; ?>
+                    계약 #<?php echo $contract['contract_order']; ?>
                     <?php 
                     // movein_tenant_signed 단계부터는 계약 수정 불가
                     $editable_statuses = ['empty', 'movein_photo', 'movein_landlord_signed'];
@@ -988,7 +1000,7 @@ function getStatusBadgeClass($status) {
           <div class="contract-card">
             <div class="contract-card-header">
               <div class="contract-card-title">
-                계약 #<?php echo $contract['id']; ?>
+                계약 #<?php echo $contract['contract_order']; ?>
                 <?php 
                 // movein_tenant_signed 단계부터는 계약 수정 불가
                 $editable_statuses = ['empty', 'movein_photo', 'movein_landlord_signed'];
@@ -1138,6 +1150,31 @@ function getStatusBadgeClass($status) {
   </div>
 
   <script>
+    // 임대물 목록 버튼 호버 효과
+    document.addEventListener('DOMContentLoaded', function() {
+      const backToListBtn = document.getElementById('backToListBtn');
+      if (backToListBtn) {
+        backToListBtn.addEventListener('mouseenter', function() {
+          this.style.backgroundColor = '#5a6268';
+          this.style.transform = 'translateY(-2px)';
+          this.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.4)';
+        });
+        
+        backToListBtn.addEventListener('mouseleave', function() {
+          this.style.backgroundColor = '#6c757d';
+          this.style.transform = 'translateY(0)';
+          this.style.boxShadow = '0 2px 8px rgba(108, 117, 125, 0.3)';
+        });
+        
+        backToListBtn.addEventListener('click', function() {
+          this.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            this.style.transform = 'scale(1)';
+          }, 150);
+        });
+      }
+    });
+
     // 토글 스위치 이벤트 처리
     document.getElementById('showFinishedToggle').addEventListener('change', function() {
       const showFinished = this.checked;

@@ -917,6 +917,13 @@ if (isset($_GET['request_sign'])) {
       .address-title-wrap { flex-direction: row; align-items: center; }
       .address-title-btns { margin-top: 0; }
     }
+    
+    .btn-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+    }
   </style>
 </head>
 <body style="background:#f8f9fa;">
@@ -929,30 +936,34 @@ if (isset($_GET['request_sign'])) {
     </h1>
 
     <div style="display:flex; justify-content:flex-end; align-items:center; max-width:900px; margin-bottom:0.5rem; margin-left:auto; margin-right:0;">
-    <a href="contracts.php?property_id=<?php echo urlencode($contract['property_id']); ?>"  class="btn btn-secondary">
-    ← 돌아가기
+    <a href="contracts.php?property_id=<?php echo urlencode($contract['property_id']); ?>" id="backToListBtn" style="background-color: #6c757d; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3); transition: all 0.2s ease; border: 1px solid #5a6268; font-size: 0.9rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+      </svg>
+      돌아가기
     </a>
   </div>
-
-
   </div>
 
-  <div class="address-title-wrap" style="max-width:900px; margin:0 auto 0.5rem auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem;">
-    <div class="address-title-text" style="font-size:1.18rem; font-weight:600; color:#222;">
+  <div class="address-title-wrap">
+    <div class="address-title-text">
       <?php echo htmlspecialchars($contract['address']); ?><?php if (!empty($contract['detail_address'])): ?>, <?php echo htmlspecialchars($contract['detail_address']); ?><?php endif; ?>
+      <!--
       <?php if ($GLOBALS['now_in_test_mode'] ?? false): ?>
         <span style="font-size:0.9rem; font-weight:500; color:#6c757d; margin-left:0.8rem; padding:0.2rem 0.6rem; background:#f8f9fa; border-radius:4px; border:1px solid #e9ecef;">
         <?php echo htmlspecialchars($status); ?>
         </span>
       <?php endif; ?>
+      -->
     </div>
-    <div class="address-title-btns" style="text-align:right;">
+  </div>
+  <div class="address-title-btns">
       <?php
       // 불일치 확인이 안 된 서명이 있으면 다음 단계 진행 불가
       if ($has_unconfirmed_mismatch) {
-        echo '<div style="background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1rem;">';
+        echo '<div id="mismatch-notice" class="notice-warning">';
         echo '⚠️ <strong>서명 불일치 확인 필요</strong><br>';
-        echo '확인되지 않은 서명 불일치가 있습니다. 계약 관리 페이지에서 불일치를 먼저 확인해주세요.';
+        echo '확인되지 않은 서명 불일치가 있습니다. 계약 관리 페이지에서 불일치 내용을 먼저 확인해주세요.';
         echo '</div>';
       }
       
@@ -971,9 +982,12 @@ if (isset($_GET['request_sign'])) {
       }
       
       if ($status === 'empty') {
+        echo '<div class="btn-container">';
         echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 등록</a>';
+        echo '</div>';
       } elseif ($status === 'movein_photo') {
-        echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 등록</a> ';
+        echo '<div class="btn-container">';
+        //echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 추가 등록</a>';
         if (!empty($photos) && !$has_unconfirmed_mismatch) { // 사진이 있고 불일치 미확인이 없을 때만 서명/전송 버튼 표시
           if ($user_role_in_contract === 'agent') {
             $button_text = $landlord_request_sent ? '임대인에게 사진 재전송' : '임대인에게 사진 전송';
@@ -983,32 +997,34 @@ if (isset($_GET['request_sign'])) {
             echo '<button class="btn btn-success" onclick="handleSign()">본인 서명하기</button>';
           }
         }
+        echo '</div>';
         // 사진이 있을 때 설명 문구 추가
         if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 사진 등록 버튼으로 다른 곳의 사진을 추가할 수 있습니다.<br>';
+          echo '<div class="notice-text">';
           if ($user_role_in_contract === 'agent') {
-            echo '사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+            echo '<strong>사진 전송은 모든 사진 등록이 끝난 후 진행하세요.</strong>';
           } else {
-            echo '본인 서명은 모든 사진 등록이 끝난 후 진행하세요.';
+            echo '<strong>본인 서명은 모든 사진 등록이 끝난 후 진행하세요.</strong>';
           }
           echo '</div>';
         }
       } elseif ($status === 'movein_landlord_signed') {
+        echo '<div class="btn-container">';
         if (!$has_unconfirmed_mismatch) {
           $button_text = $tenant_request_sent ? '임차인에게 사진 재전송' : '임차인에게 사진 전송';
           $onclick = $tenant_request_sent ? 'confirmResendLink(\'tenant\')' : 'generateShareLink(\'tenant\')';
           echo '<button class="btn btn-warning" onclick="' . $onclick . '">' . $button_text . '</button>';
         }
-        echo '<a href="#" onclick="confirmPhotoChange(\'photo_upload.php?contract_id=' . $contract_id . '\'); return false;" class="btn btn-primary" style="margin-left:1.5rem;">입주사진 등록</a> ';
+        //echo '<a href="#" onclick="confirmPhotoChange(\'photo_upload.php?contract_id=' . $contract_id . '\'); return false;" class="btn btn-primary">입주사진 추가 등록</a>';
+        echo '</div>';
         // 사진이 있을 때 설명 문구 추가
         if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 사진 등록 버튼으로 다른 곳의 사진을 추가할 수 있습니다.<br>';
-          echo '사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          echo '<div class="notice-text">';
+          echo '<strong>사진 전송은 모든 사진 등록이 끝난 후 진행하세요.</strong>';
           echo '</div>';
         }
       } elseif ($status === 'moveout_photo') {
+        echo '<div class="btn-container">';
         if (!empty($photos) && !$has_unconfirmed_mismatch) { // 사진이 있고 불일치 미확인이 없을 때만 서명/전송 버튼 표시
           if ($user_role_in_contract === 'agent') {
             $button_text = $landlord_request_sent ? '임대인에게 파손사진 재전송' : '임대인에게 파손사진 전송';
@@ -1018,28 +1034,29 @@ if (isset($_GET['request_sign'])) {
             echo '<button class="btn btn-success" onclick="handleSign()">퇴거 사진에 본인 서명하기</button>';
           }
         }
+        echo '</div>';
         // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
         if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.<br>';
+          echo '<div class="notice-text">';
           if ($user_role_in_contract === 'agent') {
-            echo '파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+            echo '<strong>파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.</strong>';
           } else {
-            echo '본인 서명은 모든 사진 등록이 끝난 후 진행하세요.';
+            echo '<strong>본인 서명은 모든 사진 등록이 끝난 후 진행하세요.</strong>';
           }
           echo '</div>';
         }
-      } elseif ($status === 'moveout_landlord_signed') {
+              } elseif ($status === 'moveout_landlord_signed') {
+        echo '<div class="btn-container">';
         if (!$has_unconfirmed_mismatch) {
           $button_text = $tenant_request_sent ? '임차인에게 파손사진 재전송' : '임차인에게 파손사진 전송';
           $onclick = $tenant_request_sent ? 'confirmResendLink(\'tenant\')' : 'generateShareLink(\'tenant\')';
           echo '<button class="btn btn-warning" onclick="' . $onclick . '">' . $button_text . '</button>';
         }
+        echo '</div>';
         // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
         if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.<br>';
-          echo '파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+          echo '<div class="notice-text">';
+          echo '<strong>파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.</strong>';
           echo '</div>';
         }
       } elseif ($status === 'moveout_tenant_signed' || $status === 'in_repair') {
@@ -1055,14 +1072,27 @@ if (isset($_GET['request_sign'])) {
           }
         }
         
+        echo '<div class="btn-container">';
         if (($status === 'moveout_tenant_signed' || $status === 'in_repair') && $has_moveout_photos_basic) {
-          echo '<button class="btn btn-warning" onclick="generateRepairShareLink()" style="margin-right: 1rem; font-weight: 600; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);">🔧 수리업체에 사진 보내기</button>';
+          echo '<button class="btn btn-warning" onclick="generateRepairShareLink()" style="font-weight: 600; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);">🔧 수리업체에 사진 보내기</button>';
         }
-        echo '<button class="btn btn-secondary" onclick="finishContract()">종료</button>';
+        echo '<button class="btn-complete" onclick="finishContract()">계약 종료하기</button>';
+        echo '</div>';
+      }
+      ?>
+  </div>
+  
+  <?php if ($status === 'movein_photo' || $status === 'movein_landlord_signed'): ?>
+    <div class="photo-btn-container" id="add-photo-btn-top">
+      <?php
+      if ($status === 'movein_photo') {
+        echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 추가 등록</a>';
+      } elseif ($status === 'movein_landlord_signed') {
+        echo '<a href="#" onclick="confirmPhotoChange(\'photo_upload.php?contract_id=' . $contract_id . '\'); return false;" class="btn btn-primary">입주사진 추가 등록</a>';
       }
       ?>
     </div>
-  </div>
+  <?php endif; ?>
 
   <!-- PC 테이블 -->
   <div class="prop-table-wrap">
@@ -1326,13 +1356,30 @@ if (isset($_GET['request_sign'])) {
       <div class="prop-card" style="text-align:center; color:#888;">등록된 사진이 없습니다.</div>
     <?php endif; ?>
   </div>
+
   <?php if (count($photos) > 3): ?>
-    <div style="text-align:right; margin:2.5rem 0 1.5rem 0;">
+
+    <?php if ($status === 'movein_photo' || $status === 'movein_landlord_signed'): ?>
+      <div class="photo-btn-container" id="add-photo-btn-bottom">
+        <?php
+        if ($status === 'movein_photo') {
+          echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 추가 등록</a>';
+        } elseif ($status === 'movein_landlord_signed') {
+          echo '<a href="#" onclick="confirmPhotoChange(\'photo_upload.php?contract_id=' . $contract_id . '\'); return false;" class="btn btn-primary">입주사진 추가 등록</a>';
+        }
+        ?>
+      </div>
+    <?php endif; ?>
+
+    <div class="address-title-btns mobile-section">
       <?php
       if ($status === 'empty') {
+        echo '<div class="btn-container">';
         echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 등록</a>';
+        echo '</div>';
       } elseif ($status === 'movein_photo') {
-        echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 등록</a> ';
+        echo '<div class="btn-container">';
+        //echo '<a href="photo_upload.php?contract_id=' . $contract_id . '" class="btn btn-primary">입주사진 추가 등록</a>';
         if (!empty($photos)) { // 사진이 있을 때만 서명/전송 버튼 표시
           if ($user_role_in_contract === 'agent') {
             echo '<button class="btn btn-warning">임대인에게 사진 전송</button>';
@@ -1340,10 +1387,10 @@ if (isset($_GET['request_sign'])) {
             echo '<button class="btn btn-success" onclick="handleSign()">본인 서명하기</button>';
           }
         }
+        echo '</div>';
         // 사진이 있을 때 설명 문구 추가
         if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 사진 등록 버튼으로 다른 곳의 사진을 추가할 수 있습니다.<br>';
+          echo '<div class="notice-text">';
           if ($user_role_in_contract === 'agent') {
             echo '사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
           } else {
@@ -1352,47 +1399,53 @@ if (isset($_GET['request_sign'])) {
           echo '</div>';
         }
       } elseif ($status === 'movein_landlord_signed') {
-        echo '<button class="btn btn-warning">임차인에게 사진 전송</button>';
-        echo '<a href="#" onclick="confirmPhotoChange(\'photo_upload.php?contract_id=' . $contract_id . '\'); return false;" class="btn btn-primary" style="margin-left:1.5rem;">입주사진 등록</a> ';
+        echo '<div class="btn-container">';
+        if (!$has_unconfirmed_mismatch) {
+          $button_text = $tenant_request_sent ? '임차인에게 사진 재전송' : '임차인에게 사진 전송';
+          $onclick = $tenant_request_sent ? 'confirmResendLink(\'tenant\')' : 'generateShareLink(\'tenant\')';
+          echo '<button class="btn btn-warning" onclick="' . $onclick . '">' . $button_text . '</button>';
+        }
+        //echo '<a href="#" onclick="confirmPhotoChange(\'photo_upload.php?contract_id=' . $contract_id . '\'); return false;" class="btn btn-primary">입주사진 추가 등록</a>';
+        echo '</div>';
         // 사진이 있을 때 설명 문구 추가
         if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 사진 등록 버튼으로 다른 곳의 사진을 추가할 수 있습니다.<br>';
+          echo '<div class="notice-text">';
           echo '사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
           echo '</div>';
         }
-      } elseif ($status === 'movein_tenant_signed') {
-        // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
-        if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.';
-          echo '</div>';
-        }
       } elseif ($status === 'moveout_photo') {
-        if (!empty($photos)) { // 사진이 있을 때만 서명/전송 버튼 표시
+        echo '<div class="btn-container">';
+        if (!empty($photos) && !$has_unconfirmed_mismatch) { // 사진이 있고 불일치 미확인이 없을 때만 서명/전송 버튼 표시
           if ($user_role_in_contract === 'agent') {
-            echo '<button class="btn btn-warning">임대인에게 파손사진 전송</button>';
+            $button_text = $landlord_request_sent ? '임대인에게 파손사진 재전송' : '임대인에게 파손사진 전송';
+            $onclick = $landlord_request_sent ? 'confirmResendLink(\'landlord\')' : 'generateShareLink(\'landlord\')';
+            echo '<button class="btn btn-warning" onclick="' . $onclick . '">' . $button_text . '</button>';
           } else {
             echo '<button class="btn btn-success" onclick="handleSign()">퇴거 사진에 본인 서명하기</button>';
           }
         }
+        echo '</div>';
         // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
         if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.<br>';
+          echo '<div class="notice-text">';
           if ($user_role_in_contract === 'agent') {
-            echo '파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
+            echo '<strong>파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.</strong>';
           } else {
-            echo '본인 서명은 모든 사진 등록이 끝난 후 진행하세요.';
+            echo '<strong>본인 서명은 모든 사진 등록이 끝난 후 진행하세요.</strong>';
           }
           echo '</div>';
         }
       } elseif ($status === 'moveout_landlord_signed') {
-        echo '<button class="btn btn-warning">임차인에게 파손사진 전송</button>';
+        echo '<div class="btn-container">';
+        if (!$has_unconfirmed_mismatch) {
+          $button_text = $tenant_request_sent ? '임차인에게 파손사진 재전송' : '임차인에게 파손사진 전송';
+          $onclick = $tenant_request_sent ? 'confirmResendLink(\'tenant\')' : 'generateShareLink(\'tenant\')';
+          echo '<button class="btn btn-warning" onclick="' . $onclick . '">' . $button_text . '</button>';
+        }
+        echo '</div>';
         // 사진이 있을 때 설명 문구 추가 (파손사진 등록 버튼은 각 사진 항목에 있으므로 전체적인 안내만)
         if (!empty($photos)) {
-          echo '<div style="margin-top: 0.8rem; font-size: 0.9rem; color: #6c757d; line-height: 1.4;">';
-          echo '💡 각 부위별로 파손사진을 등록할 수 있습니다.<br>';
+          echo '<div class="notice-text">';
           echo '파손사진 전송은 모든 사진 등록이 끝난 후 진행하세요.';
           echo '</div>';
         }
@@ -1409,10 +1462,12 @@ if (isset($_GET['request_sign'])) {
           }
         }
         
+        echo '<div class="btn-container">';
         if (($status === 'moveout_tenant_signed' || $status === 'in_repair') && $has_moveout_photos_large) {
-          echo '<button class="btn btn-warning" onclick="generateRepairShareLink()" style="margin-right: 1rem; font-weight: 600; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);">🔧 수리업체에 사진 보내기</button>';
+          echo '<button class="btn btn-warning" onclick="generateRepairShareLink()" style="font-weight: 600; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);">🔧 수리업체에 사진 보내기</button>';
         }
-        echo '<button class="btn btn-secondary" onclick="finishContract()">종료</button>';
+        echo '<button class="btn-complete" onclick="finishContract()">계약 종료하기</button>';
+        echo '</div>';
       }
       ?>
     </div>
@@ -1562,6 +1617,31 @@ if (isset($_GET['request_sign'])) {
 </div>
 
 <script>
+// 돌아가기 버튼 호버 효과
+document.addEventListener('DOMContentLoaded', function() {
+  const backToListBtn = document.getElementById('backToListBtn');
+  if (backToListBtn) {
+    backToListBtn.addEventListener('mouseenter', function() {
+      this.style.backgroundColor = '#5a6268';
+      this.style.transform = 'translateY(-2px)';
+      this.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.4)';
+    });
+    
+    backToListBtn.addEventListener('mouseleave', function() {
+      this.style.backgroundColor = '#6c757d';
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = '0 2px 6px rgba(108, 117, 125, 0.3)';
+    });
+    
+    backToListBtn.addEventListener('click', function() {
+      this.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        this.style.transform = 'scale(1)';
+      }, 150);
+    });
+  }
+});
+
 // 사진 전송 링크 생성 함수
 function generateShareLink(shareType) {
   const contractId = <?php echo $contract_id; ?>;
@@ -1821,6 +1901,7 @@ ${photoType} 확인을 위한 링크를 전송드립니다.
 임대물 주소: ${propertyAddress}
 
 🔗 링크: ${url}
+
 🔐 비밀번호: ${password}
 
 링크를 클릭하신 후 비밀번호를 입력하여 사진을 확인하시고 서명해주세요.

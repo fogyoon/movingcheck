@@ -6,8 +6,11 @@ if ($isLoggedIn) {
         header('Location: admin.php');
         exit;
     } else {
-        header('Location: properties.php');
-       exit;
+        if (!IN_DEVELOP) {
+            // 실제 운영 환경에서는 로그인한 사용자에게 properties.php로 리다이렉트
+            header('Location: properties.php');
+            exit;
+        } 
     }
 }
 ?>

@@ -130,7 +130,7 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
         .photo-section {
             background: #fff;
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 0.8rem;
             margin-bottom: 1.5rem;
             box-shadow: 0 4px 18px rgba(0,100,255,0.05);
             border: 1px solid #e3eaf2;
@@ -161,11 +161,7 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
             border-radius: 8px;
         }
         
-        .photo-item.camera-mode {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+
         
         .photo-item.preview-mode {
             display: flex;
@@ -209,10 +205,7 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
                 max-width: 100%;
             }
             
-            .camera-controls {
-                width: 100% !important;
-                margin-top: 1rem !important;
-            }
+
         }
         
         .movein-photo img {
@@ -235,9 +228,27 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
             border-radius: 4px;
         }
         
-        .camera-section {
+        .button-section {
             flex: 1;
-            min-width: 300px;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .button-section .description {
+            text-align: center;
+            padding: 1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            width: 100%;
+        }
+        
+        .button-section .button-container {
+            text-align: center;
+            width: 100%;
         }
         
         .photo-header {
@@ -344,162 +355,23 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
             background: #e0a800;
         }
         
-        /* 카메라 관련 스타일 */
-        .camera-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-        }
+
+
         
-        .camera-video {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            background: #000;
-        }
-        
-        .overlay-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #000;
-            /* aspect-ratio는 JavaScript에서 동적으로 설정 */
-        }
-        
-        .overlay-video {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 8px;
-            object-fit: contain;
-            background: #000;
-        }
-        
-        .overlay-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-            opacity: 0.5;
-            pointer-events: none;
-            object-fit: cover;
-            z-index: 10;
-        }
-        
-        /* 비율별 컨테이너 초기 크기 (JavaScript에서 실제 비디오 비율로 덮어씀) */
-        .overlay-container.portrait {
-            aspect-ratio: 3/4;
-            max-width: 300px;
-        }
-        
-        .overlay-container.landscape {
-            aspect-ratio: 4/3;
-            max-width: 400px;
-        }
-        
-        .overlay-container.square {
-            aspect-ratio: 1/1;
-            max-width: 350px;
-        }
-        
-        .overlay-container.custom-ratio {
-            /* JavaScript에서 동적으로 설정 */
-        }
-        
-        /* 비디오 표시 모드는 JavaScript에서 동적으로 조정 */
-        .overlay-video {
-            object-fit: contain; /* 기본값, JavaScript에서 필요시 cover로 변경 */
-        }
-        
-        .camera-controls {
-            text-align: center;
-            margin-top: 1rem;
-        }
-        
-        .camera-controls .btn {
-            margin: 0.25rem;
-        }
-        
-        .captured-photo {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-top: 1rem;
-        }
-        
-        .comparison-container {
-            display: none;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .comparison-photos {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .comparison-item {
-            text-align: center;
-            flex: 1;
-            min-width: 200px;
-            max-width: 300px;
-        }
-        
-        .comparison-item h4 {
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-            color: #333;
-        }
-        
-        .comparison-item img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+
+
         
         @media (max-width: 768px) {
             .photo-item.preview-mode {
                 flex-direction: column;
             }
             
-            .comparison-photos {
-                flex-direction: column !important;
-                gap: 1.5rem !important;
-            }
-            
-            .comparison-item {
-                max-width: 100% !important;
-            }
-            
-            .camera-container {
-                max-width: 100%;
-            }
-            
             .photo-header h3 {
                 font-size: 1rem;
             }
             
-            /* 모바일에서 슬라이더 터치 영역 확장 */
-            input[type="range"]::-webkit-slider-thumb {
-                width: 32px !important;
-                height: 32px !important;
-            }
-            
-            input[type="range"]::-moz-range-thumb {
-                width: 32px !important;
-                height: 32px !important;
+            .button-section .description {
+                padding: 0.5rem;
             }
         }
     </style>
@@ -538,35 +410,6 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
         <?php endif; ?>
     </div>
 
-    <!-- iOS 사용자 안내 -->
-    <div id="ios-notice" style="display: none; background: #e3f2fd; border: 1px solid #1976d2; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-        <h4 style="color: #1976d2; margin-bottom: 0.5rem;">📱 iOS 사용자 안내</h4>
-        <p style="margin: 0; font-size: 0.9rem; line-height: 1.4;">
-            카메라 사용을 위해 다음 설정을 확인해주세요:<br>
-            <strong>설정 → Safari → 카메라 → 허용</strong><br>
-            또는 <strong>설정 → 개인정보 보호 → 카메라 → Safari 허용</strong>
-        </p>
-    </div>
-
-    <script>
-        // iOS 안내는 권한 거부 시에만 표시 (초기에는 숨김)
-        
-        // HTTPS 확인
-        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-            const notice = document.getElementById('ios-notice');
-            notice.style.display = 'block';
-            notice.style.background = '#fff3cd';
-            notice.style.borderColor = '#ffc107';
-            notice.innerHTML = `
-                <h4 style="color: #856404; margin-bottom: 0.5rem;">⚠️ 보안 연결 필요</h4>
-                <p style="margin: 0; font-size: 0.9rem; line-height: 1.4; color: #856404;">
-                    카메라 사용을 위해 HTTPS 연결이 필요합니다.<br>
-                    주소창에서 <strong>https://</strong>로 시작하는지 확인해주세요.<br>
-                    <small>현재: ${location.protocol}//${location.hostname}</small>
-                </p>
-            `;
-        }
-    </script>
 
     <?php if (!empty($movein_overview)): ?>
     <div class="photo-section">
@@ -594,28 +437,23 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
                     <h4 style="margin-bottom: 0.5rem; color: #28a745;">퇴거 시 (촬영 완료)</h4>
                     <img src="<?php echo htmlspecialchars($moveout_photo['path']); ?>" alt="퇴거 위치확인 사진">
                 </div>
+                <!--
                 <div class="camera-controls" style="width: 100%; text-align: center; margin-top: 1rem;">
                     <button class="btn btn-warning" onclick="startCameraMode('overview', <?php echo $overview['index']; ?>, '<?php echo htmlspecialchars($overview['path']); ?>')">
                         🔄 다시 촬영
                     </button>
                 </div>
+                -->
             </div>
             <?php else: ?>
-            <!-- moveout 사진이 없는 경우: 촬영 모드 -->
+            <!-- moveout 사진이 없는 경우: 위치확인용 사진은 퇴거 시 촬영 불필요 -->
             <div class="photo-item preview-mode overview-photo" id="photo-item-overview-<?php echo $overview['index']; ?>">
-                            <div class="movein-photo">
-                <img src="<?php echo htmlspecialchars($overview['path']); ?>" alt="입주 위치확인 사진">
-            </div>
-                <div class="camera-section">
-                    <div class="camera-container" id="camera-container-overview-<?php echo $overview['index']; ?>">
-                        <div style="text-align: center; padding: 2rem; color: #666;">
-                            버튼을 눌러 비교 사진 촬영
-                        </div>
-                    </div>
-                    <div class="camera-controls">
-                        <button class="btn btn-primary" onclick="startCameraMode('overview', <?php echo $overview['index']; ?>, '<?php echo htmlspecialchars($overview['path']); ?>')">
-                            📷 촬영 시작
-                        </button>
+                <div class="movein-photo">
+                    <img src="<?php echo htmlspecialchars($overview['path']); ?>" alt="입주 위치확인 사진">
+                </div>
+                <div class="button-section">
+                    <div class="description">
+                        단지 위치를 확인하기 위한 사진입니다.<br>퇴거사진 촬영은 아래 세부 사진에서 가능합니다.
                     </div>
                 </div>
             </div>
@@ -650,10 +488,10 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
                     <h4 style="margin-bottom: 0.5rem; color: #28a745;">퇴거 시 (촬영 완료)</h4>
                     <img src="<?php echo htmlspecialchars($moveout_photo['path']); ?>" alt="퇴거 세부 사진">
                 </div>
-                <div class="camera-controls" style="width: 100%; text-align: center; margin-top: 1rem;">
-                    <button class="btn btn-warning" onclick="startCameraMode('closeup', <?php echo $closeup['index']; ?>, '<?php echo htmlspecialchars($closeup['path']); ?>')">
+                <div style="width: 100%; text-align: center; margin-top: 1rem;">
+                    <a href="camera_capture.php?contract_id=<?php echo $contract_id; ?>&photo_id=<?php echo $photo_id; ?>&type=closeup&index=<?php echo $closeup['index']; ?>" class="btn btn-warning">
                         🔄 다시 촬영
-                    </button>
+                    </a>
                 </div>
             </div>
             <?php else: ?>
@@ -662,16 +500,14 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
                             <div class="movein-photo">
                 <img src="<?php echo htmlspecialchars($closeup['path']); ?>" alt="입주 세부 사진">
             </div>
-                <div class="camera-section">
-                    <div class="camera-container" id="camera-container-closeup-<?php echo $closeup['index']; ?>">
-                        <div style="text-align: center; padding: 2rem; color: #666;">
-                            버튼을 눌러 비교 사진 촬영
-                        </div>
+                <div class="button-section">
+                    <div class="description">
+                        버튼을 눌러 비교 사진 촬영
                     </div>
-                    <div class="camera-controls">
-                        <button class="btn btn-primary" onclick="startCameraMode('closeup', <?php echo $closeup['index']; ?>, '<?php echo htmlspecialchars($closeup['path']); ?>')">
+                    <div class="button-container">
+                        <a href="camera_capture.php?contract_id=<?php echo $contract_id; ?>&photo_id=<?php echo $photo_id; ?>&type=closeup&index=<?php echo $closeup['index']; ?>" class="btn btn-primary">
                             📷 촬영 시작
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -682,999 +518,69 @@ if (!in_array($status, ['movein_tenant_signed', 'moveout_photo', 'moveout_landlo
 </main>
 
 <script>
-// PHP 설정값을 JavaScript로 전달
-const CAMERA_CONFIG = {
-    idealWidth: <?php echo CAMERA_IDEAL_WIDTH; ?>,
-    idealHeight: <?php echo CAMERA_IDEAL_HEIGHT; ?>,
-    minWidth: <?php echo CAMERA_MIN_WIDTH; ?>,
-    minHeight: <?php echo CAMERA_MIN_HEIGHT; ?>,
-    jpegQuality: <?php echo CAMERA_JPEG_QUALITY; ?>
-};
-
-let currentStream = null;
-let capturedPhotos = {};
-let currentImageInfo = null; // 현재 입주 사진의 비율 정보 저장
-
-// 이미지 회전 감지 및 보정 함수
-function getImageOrientation(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const view = new DataView(e.target.result);
-            if (view.getUint16(0, false) != 0xFFD8) {
-                resolve(-2); // JPEG가 아님
-                return;
-            }
-            const length = view.byteLength;
-            let offset = 2;
-            while (offset < length) {
-                const marker = view.getUint16(offset, false);
-                offset += 2;
-                if (marker == 0xFFE1) {
-                    if (view.getUint32(offset += 2, false) != 0x45786966) {
-                        resolve(-1); // EXIF 없음
-                        return;
-                    }
-                    const little = view.getUint16(offset += 6, false) == 0x4949;
-                    offset += view.getUint32(offset + 4, little);
-                    const tags = view.getUint16(offset, little);
-                    offset += 2;
-                    for (let i = 0; i < tags; i++) {
-                        if (view.getUint16(offset + (i * 12), little) == 0x0112) {
-                            resolve(view.getUint16(offset + (i * 12) + 8, little));
-                            return;
-                        }
-                    }
-                } else if ((marker & 0xFF00) != 0xFF00) {
-                    break;
-                }
-                offset += view.getUint16(offset, false);
-            }
-            resolve(-1); // orientation 태그 없음
-        };
-        reader.readAsArrayBuffer(file);
-    });
-}
-
-// Base64를 Blob으로 변환
-function base64ToBlob(base64, mimeType) {
-    const byteCharacters = atob(base64.split(',')[1]);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], {type: mimeType});
-}
-
-// 입주 사진의 비율 분석 함수
-function analyzeImageAspectRatio(imgElement) {
-    return new Promise((resolve) => {
-        if (imgElement.complete && imgElement.naturalWidth && imgElement.naturalHeight) {
-            const width = imgElement.naturalWidth;
-            const height = imgElement.naturalHeight;
-            const aspectRatio = width / height;
+// 페이지 로드 시 촬영한 사진 위치로 스크롤
+document.addEventListener('DOMContentLoaded', function() {
+    // URL에서 촬영한 사진 정보 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const capturedType = urlParams.get('captured_type');
+    const capturedIndex = urlParams.get('captured_index');
+    const scrollType = urlParams.get('scroll_type');
+    const scrollIndex = urlParams.get('scroll_index');
+    
+    // 저장 완료 후 촬영한 사진으로 스크롤
+    if (capturedType && capturedIndex) {
+        setTimeout(function() {
+            const targetElement = document.getElementById(`photo-item-${capturedType}-${capturedIndex}`);
             
-            console.log(`이미지 크기: ${width}x${height}, 비율: ${aspectRatio.toFixed(3)}`);
-            
-            resolve({
-                width: width,
-                height: height,
-                aspectRatio: aspectRatio,
-                isPortrait: height > width,
-                isLandscape: width > height,
-                isSquare: Math.abs(aspectRatio - 1) < 0.1
-            });
-        } else {
-            // 이미지가 로드되지 않은 경우 로드 완료 대기
-            imgElement.onload = () => {
-                const width = imgElement.naturalWidth;
-                const height = imgElement.naturalHeight;
-                const aspectRatio = width / height;
-                
-                console.log(`이미지 크기: ${width}x${height}, 비율: ${aspectRatio.toFixed(3)}`);
-                
-                resolve({
-                    width: width,
-                    height: height,
-                    aspectRatio: aspectRatio,
-                    isPortrait: height > width,
-                    isLandscape: width > height,
-                    isSquare: Math.abs(aspectRatio - 1) < 0.1
+            if (targetElement) {
+                targetElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
                 });
-            };
+                
+                // 하이라이트 효과 추가 (저장 완료 - 초록색)
+                targetElement.style.transition = 'box-shadow 0.3s ease';
+                targetElement.style.boxShadow = '0 0 20px rgba(40, 167, 69, 0.5)';
+                
+                // 3초 후 하이라이트 제거
+                setTimeout(function() {
+                    targetElement.style.boxShadow = '';
+                }, 3000);
+            }
+        }, 1000);
+    }
+    
+    // 취소 후 촬영하려던 사진으로 스크롤
+    if (scrollType && scrollIndex) {
+        console.log('스크롤 파라미터:', scrollType, scrollIndex);
+        setTimeout(function() {
+            const targetElement = document.getElementById(`photo-item-${scrollType}-${scrollIndex}`);
+            console.log('찾은 요소:', targetElement);
             
-            imgElement.onerror = () => {
-                console.error('이미지 로드 실패, 기본 비율 사용');
-                resolve({
-                    width: CAMERA_CONFIG.idealWidth,
-                    height: CAMERA_CONFIG.idealHeight,
-                    aspectRatio: CAMERA_CONFIG.idealWidth / CAMERA_CONFIG.idealHeight,
-                    isPortrait: false,
-                    isLandscape: true,
-                    isSquare: false
+            if (targetElement) {
+                targetElement.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
                 });
-            };
-        }
-    });
-}
-
-// 비율에 맞는 카메라 제약조건 생성
-function createCameraConstraints(targetAspectRatio, isIOS) {
-    // 목표 비율에 맞는 해상도 계산
-    let idealWidth, idealHeight;
-    
-    if (targetAspectRatio >= 1) {
-        // 가로가 더 긴 경우 (랜드스케이프)
-        idealWidth = CAMERA_CONFIG.idealWidth;
-        idealHeight = Math.round(idealWidth / targetAspectRatio);
-    } else {
-        // 세로가 더 긴 경우 (포트레이트)
-        idealHeight = CAMERA_CONFIG.idealHeight;
-        idealWidth = Math.round(idealHeight * targetAspectRatio);
-    }
-    
-    // 최소값 계산
-    const minWidth = Math.max(CAMERA_CONFIG.minWidth, Math.round(idealWidth * 0.75));
-    const minHeight = Math.max(CAMERA_CONFIG.minHeight, Math.round(idealHeight * 0.75));
-    
-    console.log(`카메라 제약조건 - 목표: ${idealWidth}x${idealHeight}, 최소: ${minWidth}x${minHeight}, 비율: ${targetAspectRatio.toFixed(3)}`);
-    
-    // 모든 비율에서 aspectRatio 제약조건 강력하게 적용
-    const constraints = isIOS ? {
-        video: {
-            facingMode: 'environment',
-            width: { ideal: idealWidth, min: minWidth },
-            height: { ideal: idealHeight, min: minHeight },
-            aspectRatio: { ideal: targetAspectRatio, min: targetAspectRatio * 0.9, max: targetAspectRatio * 1.1 }
-        }
-    } : {
-        video: { 
-            width: { ideal: idealWidth, min: minWidth },
-            height: { ideal: idealHeight, min: minHeight },
-            aspectRatio: { ideal: targetAspectRatio, min: targetAspectRatio * 0.9, max: targetAspectRatio * 1.1 },
-            facingMode: { ideal: 'environment' }
-        }
-    };
-    
-    return { constraints, idealWidth, idealHeight, minWidth, minHeight };
-}
-
-// 컨테이너를 목표 비율에 맞춰 조정하는 함수
-function adjustContainerToTargetRatio(container, actualRatio, targetRatio) {
-    console.log(`컨테이너 비율 조정 - 실제: ${actualRatio.toFixed(3)}, 목표: ${targetRatio.toFixed(3)}`);
-    
-    // 목표 비율(입주 사진 비율)을 우선시하여 컨테이너 조정
-    container.style.aspectRatio = `${targetRatio}`;
-    
-    // 목표 비율에 따른 최대 너비 제한
-    if (targetRatio < 1) {
-        container.style.maxWidth = '300px';
-        console.log('세로 목표 - 컨테이너 너비 300px 제한');
-    } else if (targetRatio < 1.2) {
-        container.style.maxWidth = '350px';
-        console.log('거의 정사각형 목표 - 컨테이너 너비 350px 제한');
-    } else {
-        container.style.maxWidth = '400px';
-        console.log('가로 목표 - 컨테이너 너비 400px 제한');
-    }
-    
-    console.log(`컨테이너 최종 설정 - aspect-ratio: ${targetRatio}, max-width: ${container.style.maxWidth}`);
-}
-
-// 비디오 표시 크기 조정 함수
-function adjustVideoDisplaySize(video, container, targetRatio, actualRatio) {
-    console.log(`비디오 표시 크기 조정 - 목표 비율: ${targetRatio.toFixed(3)}, 실제 비율: ${actualRatio.toFixed(3)}`);
-    
-    const ratioDifference = Math.abs(actualRatio - targetRatio);
-    
-    // 항상 contain 모드 사용하여 줌인 방지
-    video.style.objectFit = 'contain';
-    video.style.objectPosition = 'center';
-    
-    if (ratioDifference < 0.1) {
-        console.log('비디오 표시 모드: contain (비율 거의 일치, 완벽한 매칭)');
-    } else if (ratioDifference < 0.3) {
-        console.log('비디오 표시 모드: contain (비율 약간 차이, 양쪽에 여백 가능)');
-    } else {
-        console.log('비디오 표시 모드: contain (비율 큰 차이, 여백 있음)');
-        
-        // 극단적인 비율 차이인 경우 경고
-        if (targetRatio < 1 && actualRatio > 1.5) {
-            console.warn('세로 목표 + 가로 비디오: 카메라가 90도 회전된 것으로 추정됩니다.');
-        } else if (targetRatio > 1.5 && actualRatio < 1) {
-            console.warn('가로 목표 + 세로 비디오: 카메라가 90도 회전된 것으로 추정됩니다.');
-        }
-    }
-    
-    // 컨테이너의 현재 설정 확인
-    const containerStyle = window.getComputedStyle(container);
-    console.log(`컨테이너 최종 상태 - aspect-ratio: ${containerStyle.aspectRatio}, max-width: ${container.style.maxWidth}`);
-    console.log(`비율 차이: ${ratioDifference.toFixed(3)} (0.1 미만이면 완벽한 매칭)`);
-}
-
-// 이미지 회전 보정 함수
-function correctImageOrientation(canvas, orientation) {
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    // 임시 캔버스 생성
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    // orientation에 따른 변환 적용
-    switch (orientation) {
-        case 2:
-            // 수평 뒤집기
-            tempCanvas.width = width;
-            tempCanvas.height = height;
-            tempCtx.scale(-1, 1);
-            tempCtx.drawImage(canvas, -width, 0);
-            break;
-        case 3:
-            // 180도 회전
-            tempCanvas.width = width;
-            tempCanvas.height = height;
-            tempCtx.rotate(Math.PI);
-            tempCtx.drawImage(canvas, -width, -height);
-            break;
-        case 4:
-            // 수직 뒤집기
-            tempCanvas.width = width;
-            tempCanvas.height = height;
-            tempCtx.scale(1, -1);
-            tempCtx.drawImage(canvas, 0, -height);
-            break;
-        case 5:
-            // 90도 반시계방향 회전 + 수평 뒤집기
-            tempCanvas.width = height;
-            tempCanvas.height = width;
-            tempCtx.rotate(-Math.PI / 2);
-            tempCtx.scale(-1, 1);
-            tempCtx.drawImage(canvas, -height, -width);
-            break;
-        case 6:
-            // 90도 시계방향 회전
-            tempCanvas.width = height;
-            tempCanvas.height = width;
-            tempCtx.rotate(Math.PI / 2);
-            tempCtx.drawImage(canvas, 0, -height);
-            break;
-        case 7:
-            // 90도 시계방향 회전 + 수평 뒤집기
-            tempCanvas.width = height;
-            tempCanvas.height = width;
-            tempCtx.rotate(Math.PI / 2);
-            tempCtx.scale(-1, 1);
-            tempCtx.drawImage(canvas, -height, 0);
-            break;
-        case 8:
-            // 90도 반시계방향 회전
-            tempCanvas.width = height;
-            tempCanvas.height = width;
-            tempCtx.rotate(-Math.PI / 2);
-            tempCtx.drawImage(canvas, -width, 0);
-            break;
-        default:
-            // 회전 없음 (orientation 1 또는 undefined)
-            return canvas;
-    }
-    
-    // 원본 캔버스에 보정된 이미지 복사
-    canvas.width = tempCanvas.width;
-    canvas.height = tempCanvas.height;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(tempCanvas, 0, 0);
-    
-    return canvas;
-}
-
-// iOS 사용자 안내 표시 함수
-function showIOSGuide() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS) {
-        const notice = document.getElementById('ios-notice');
-        notice.style.display = 'block';
-        notice.style.background = '#e3f2fd';
-        notice.style.borderColor = '#1976d2';
-        notice.innerHTML = `
-            <h4 style="color: #1976d2; margin-bottom: 0.5rem;">📱 iOS 카메라 권한 설정</h4>
-            <p style="margin: 0; font-size: 0.9rem; line-height: 1.4;">
-                카메라 권한이 거부되었습니다. 다음 방법으로 허용해주세요:<br><br>
-                <strong>▼ Safari 주소창에서:</strong><br>
-                1. 주소창 왼쪽 "aA" 버튼 클릭<br>
-                2. "웹사이트 설정" 선택<br>
-                3. "카메라" → "허용" 선택<br><br>
-                <strong>▼ 또는 iOS 설정에서:</strong><br>
-                1. 설정 → Safari → 카메라 → "허용"<br>
-                2. 설정 → 개인정보 보호 → 카메라 → Safari 허용<br><br>
-                <small>설정 변경 후 페이지를 새로고침해주세요.</small>
-            </p>
-        `;
-    }
-}
-
-// 촬영 모드로 전환
-function startCameraMode(type, index, originalPhotoPath) {
-    const photoItem = document.getElementById(`photo-item-${type}-${index}`);
-    const originalPhoto = photoItem.querySelector('.movein-photo img');
-    const meta = photoItem.querySelector('.photo-meta');
-    
-    // 촬영 모드로 레이아웃 변경
-    photoItem.className = 'photo-item camera-mode';
-    photoItem.innerHTML = `
-        <div class="photo-header">
-            <h3>${type === 'overview' ? '위치확인용' : '세부'} 사진 촬영</h3>
-            <p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">
-                ${meta ? meta.textContent : '기존 사진과 비교하여 같은 구도로 촬영해주세요'}
-            </p>
-        </div>
-        <div class="camera-container" id="camera-container-${type}-${index}">
-            <div style="text-align: center; padding: 2rem; color: #666;">
-                카메라를 준비하고 있습니다...
-            </div>
-        </div>
-    `;
-    
-    // 카메라 시작
-    requestCameraPermission(type, index, originalPhotoPath);
-}
-
-// 촬영 모드 종료
-function exitCameraMode(type, index, originalPhotoPath) {
-    // 카메라 정지
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-    }
-    
-    // 페이지 새로고침으로 원래 상태로 복원
-    location.reload();
-}
-
-// getUserMedia를 위한 폴백 함수
-function getUserMediaCompat() {
-    // 최신 API
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        return navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-    }
-    
-    // 구형 API 폴백
-    const getUserMedia = navigator.webkitGetUserMedia || 
-                        navigator.mozGetUserMedia || 
-                        navigator.msGetUserMedia ||
-                        navigator.getUserMedia;
-    
-    if (getUserMedia) {
-        return function(constraints) {
-            return new Promise((resolve, reject) => {
-                getUserMedia.call(navigator, constraints, resolve, reject);
-            });
-        };
-    }
-    
-    return null;
-}
-
-// 권한 요청 함수 (사용자 제스처에서 호출되어야 함)
-async function requestCameraPermission(type, index, originalPhotoPath) {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const container = document.getElementById(`camera-container-${type}-${index}`);
-    
-    // 카메라 API 지원 확인
-    const getUserMedia = getUserMediaCompat();
-    
-    if (!getUserMedia) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px;">
-                <h3 style="color: #721c24; margin-bottom: 1rem;">❌ 카메라 미지원</h3>
-                <p>현재 브라우저에서는 카메라 기능을 지원하지 않습니다.</p>
-                <p style="font-size: 0.9rem; margin-top: 1rem;">
-                    ${isIOS ? 'Safari 최신 버전으로 업데이트하거나 HTTPS 환경에서 접속해주세요.' : '최신 브라우저를 사용해주세요.'}
-                </p>
-            </div>
-        `;
-        return;
-    }
-    
-    try {
-        // 먼저 간단한 권한 요청을 시도
-        console.log('카메라 권한 요청 시작...');
-        
-        container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #666;">
-                <div style="margin-bottom: 1rem;">📷</div>
-                <div>카메라 권한을 요청하고 있습니다...</div>
-                <div style="font-size: 0.9rem; margin-top: 0.5rem; color: #888;">
-                    ${isIOS ? 'Safari에서 "허용" 버튼을 눌러주세요' : '브라우저에서 카메라 접근을 허용해주세요'}
-                </div>
-            </div>
-        `;
-        
-        const testConstraints = {
-            video: true // 가장 기본적인 요청
-        };
-        
-        // 권한 요청을 위한 임시 스트림
-        const testStream = await getUserMedia(testConstraints);
-        
-        // 임시 스트림 즉시 정지
-        if (testStream && testStream.getTracks) {
-            testStream.getTracks().forEach(track => track.stop());
-        } else if (testStream && testStream.stop) {
-            testStream.stop(); // 구형 API
-        }
-        
-        console.log('카메라 권한 획득 성공, 실제 카메라 시작...');
-        
-        // 권한이 허용되면 실제 카메라 시작
-        await startCamera(type, index, originalPhotoPath);
-        
-    } catch (error) {
-        console.error('권한 요청 실패:', error);
-        
-        let errorMessage = '카메라 권한이 필요합니다.\n\n';
-        
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            if (isIOS) {
-                // iOS 사용자 안내 표시
-                showIOSGuide();
-                errorMessage += 'iPhone Safari에서 카메라 권한이 거부되었습니다.\n\n';
-                errorMessage += '위쪽의 안내를 참고하여 카메라 권한을 허용해주세요.\n\n';
-                errorMessage += '※ HTTP 환경에서는 카메라 접근이 제한될 수 있습니다.';
+                
+                // 하이라이트 효과 추가 (취소 - 파란색)
+                targetElement.style.transition = 'box-shadow 0.3s ease';
+                targetElement.style.boxShadow = '0 0 20px rgba(25, 118, 210, 0.5)';
+                
+                // 3초 후 하이라이트 제거
+                setTimeout(function() {
+                    targetElement.style.boxShadow = '';
+                }, 3000);
             } else {
-                errorMessage += '브라우저에서 카메라 권한을 허용해주세요.';
+                console.log('요소를 찾을 수 없음:', `photo-item-${scrollType}-${scrollIndex}`);
+                // 페이지의 모든 photo-item ID들을 로그로 출력
+                const allPhotoItems = document.querySelectorAll('[id^="photo-item-"]');
+                console.log('페이지의 모든 photo-item들:');
+                allPhotoItems.forEach(item => {
+                    console.log(item.id);
+                });
             }
-        } else if (error.name === 'NotFoundError') {
-            errorMessage += '카메라를 찾을 수 없습니다.\n카메라가 연결되어 있고 다른 앱에서 사용 중이 아닌지 확인해주세요.';
-        } else {
-            errorMessage += '오류: ' + (error.message || error.toString());
-        }
-        
-        container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px;">
-                <h3 style="color: #721c24; margin-bottom: 1rem;">📷 카메라 사용 불가</h3>
-                <pre style="white-space: pre-wrap; text-align: left; font-size: 0.9rem; line-height: 1.4;">${errorMessage}</pre>
-                <button class="btn btn-primary" onclick="requestCameraPermission('${type}', ${index}, '${originalPhotoPath}')" style="margin-top: 1rem;">
-                    다시 시도
-                </button>
-            </div>
-        `;
-    }
-}
-
-async function startCamera(type, index, originalPhotoPath) {
-    const containerId = `camera-container-${type}-${index}`;
-    const container = document.getElementById(containerId);
-    
-    // 기존 카메라 스트림 정지
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-    }
-    
-    // iOS 사파리 확인
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    
-    // 로딩 표시
-    container.innerHTML = `
-        <div style="text-align: center; padding: 2rem; color: #666;">
-            <div style="margin-bottom: 1rem;">📷</div>
-            <div>입주 사진 비율 분석 중...</div>
-            <div style="font-size: 0.9rem; margin-top: 0.5rem; color: #888;">
-                카메라 화면을 입주 사진과 동일한 비율로 설정합니다
-            </div>
-        </div>
-    `;
-    
-    try {
-        // 카메라 API 지원 확인
-        const getUserMedia = getUserMediaCompat();
-        
-        if (!getUserMedia) {
-            throw new Error('카메라 API를 지원하지 않는 브라우저입니다.');
-        }
-
-        // 입주 사진의 비율 분석
-        const originalImg = new Image();
-        originalImg.crossOrigin = 'anonymous';
-        originalImg.src = originalPhotoPath;
-        
-        const imageInfo = await analyzeImageAspectRatio(originalImg);
-        console.log('입주 사진 분석 결과:', imageInfo);
-        
-        // 전역 변수에 이미지 정보 저장
-        currentImageInfo = imageInfo;
-        
-        // 로딩 메시지 업데이트
-        container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #666;">
-                <div style="margin-bottom: 1rem;">📷</div>
-                <div>카메라 권한을 요청하고 있습니다...</div>
-                <div style="font-size: 0.9rem; margin-top: 0.5rem; color: #888;">
-                    ${isIOS ? 'Safari에서 "허용" 버튼을 눌러주세요' : '브라우저에서 카메라 접근을 허용해주세요'}
-                </div>
-                <div style="font-size: 0.8rem; margin-top: 0.5rem; color: #0064FF;">
-                    목표 비율: ${imageInfo.aspectRatio.toFixed(3)} (${imageInfo.isPortrait ? '세로' : imageInfo.isLandscape ? '가로' : '정사각형'})
-                </div>
-            </div>
-        `;
-
-        // 권한 상태 확인 (지원하는 브라우저만)
-        if (navigator.permissions) {
-            try {
-                const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-                console.log('카메라 권한 상태:', permissionStatus.state);
-                
-                if (permissionStatus.state === 'denied') {
-                    throw new Error('카메라 권한이 차단되었습니다. 브라우저 설정에서 허용해주세요.');
-                }
-            } catch (permError) {
-                console.log('권한 상태 확인 불가:', permError);
-                // 권한 API를 지원하지 않는 경우 계속 진행
-            }
-        }
-
-        // 입주 사진 비율에 맞는 카메라 제약조건 생성
-        const cameraConfig = createCameraConstraints(imageInfo.aspectRatio, isIOS);
-        
-        console.log('카메라 스트림 요청 중...', cameraConfig.constraints);
-        
-        // 카메라 스트림 요청 - 단계적 폴백 시스템
-        try {
-            currentStream = await getUserMedia(cameraConfig.constraints);
-            console.log('1단계: 최적 비율 + 고해상도 카메라 스트림 획득 성공');
-        } catch (highResError) {
-            console.log('1단계 실패, 2단계 시도: 비율 유지 + 중간 해상도...', highResError);
-            
-            // 2단계: 중간 해상도 + 비율 제약 유지
-            const fallbackConfig = createCameraConstraints(imageInfo.aspectRatio, isIOS);
-            fallbackConfig.constraints.video.width.ideal = Math.floor(fallbackConfig.idealWidth * 0.75);
-            fallbackConfig.constraints.video.height.ideal = Math.floor(fallbackConfig.idealHeight * 0.75);
-            
-            try {
-                currentStream = await getUserMedia(fallbackConfig.constraints);
-                console.log('2단계: 중간 해상도 카메라 스트림 획득 성공');
-            } catch (mediumResError) {
-                console.log('2단계 실패, 3단계 시도: 비율 제약 완화...', mediumResError);
-                
-                // 3단계: 비율 제약 완화 (±20%)
-                const relaxedConstraints = {
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: Math.floor(fallbackConfig.idealWidth * 0.5) },
-                        height: { ideal: Math.floor(fallbackConfig.idealHeight * 0.5) },
-                        aspectRatio: { ideal: imageInfo.aspectRatio, min: imageInfo.aspectRatio * 0.8, max: imageInfo.aspectRatio * 1.2 }
-                    }
-                };
-                
-                try {
-                    currentStream = await getUserMedia(relaxedConstraints);
-                    console.log('3단계: 완화된 비율 제약 카메라 스트림 획득 성공');
-                } catch (relaxedError) {
-                    console.log('3단계 실패, 4단계 시도: 비율 제약만...', relaxedError);
-                    
-                    // 4단계: 비율 제약만 (해상도 제약 없음)
-                    const ratioOnlyConstraints = {
-                        video: {
-                            facingMode: 'environment',
-                            aspectRatio: { ideal: imageInfo.aspectRatio }
-                        }
-                    };
-                    
-                    try {
-                        currentStream = await getUserMedia(ratioOnlyConstraints);
-                        console.log('4단계: 비율 제약만 카메라 스트림 획득 성공');
-                    } catch (ratioError) {
-                        console.log('4단계 실패, 5단계 시도: 최소 제약조건...', ratioError);
-                        
-                        // 5단계: 최소 제약조건 (비율 제약 없음)
-                        const minimalConstraints = {
-                            video: {
-                                facingMode: 'environment'
-                            }
-                        };
-                        
-                        currentStream = await getUserMedia(minimalConstraints);
-                        console.log('5단계: 최소 제약조건 카메라 스트림 획득 성공 (비율 불일치 가능)');
-                    }
-                }
-            }
-        }
-        
-        // 비율에 맞는 CSS 클래스 결정
-        let ratioClass = 'custom-ratio';
-        if (imageInfo.isSquare) {
-            ratioClass = 'square';
-        } else if (imageInfo.isPortrait) {
-            ratioClass = 'portrait';
-        } else if (imageInfo.isLandscape) {
-            ratioClass = 'landscape';
-        }
-        
-        // 오버레이 컨테이너 생성
-        container.innerHTML = `
-            <div class="overlay-container ${ratioClass}" id="overlay-container-${type}-${index}">
-                <video class="overlay-video" autoplay playsinline></video>
-                <img class="overlay-image" src="${originalPhotoPath}" alt="입주 사진 오버레이">
-                <canvas id="canvas-${type}-${index}" style="display:none;"></canvas>
-            </div>
-            <div class="camera-controls" style="text-align: center;">
-                <button class="btn btn-primary" onclick="capturePhoto('${type}', ${index})" style="font-size: 1.1rem; padding: 1rem 2rem; margin-bottom: 1rem;">
-                    📸 촬영하기
-                </button>
-                <div style="margin: 2rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                    <label style="display: block; margin-bottom: 1rem; font-weight: 600; color: #333;">
-                        오버레이 투명도: <span id="opacity-value-${type}-${index}" style="color: #0064FF; font-weight: 700;">50</span>%
-                    </label>
-                    <input type="range" min="0" max="100" value="50" oninput="adjustOverlay('${type}', ${index}, this.value)" 
-                           style="width: 100%; height: 8px; -webkit-appearance: none; appearance: none; background: #ddd; outline: none; border-radius: 4px;">
-                </div>
-                <button class="btn btn-secondary" onclick="exitCameraMode('${type}', ${index}, '${originalPhotoPath}')">
-                    ✕ 취소
-                </button>
-            </div>
-            <div class="comparison-container" id="comparison-${type}-${index}" style="display:none;">
-                <h3 style="text-align: center; margin: 1.5rem 0;">📸 촬영 완료</h3>
-                <div class="comparison-photos" style="display: flex; gap: 1rem; justify-content: center; max-width: 800px; margin: 0 auto;">
-                    <div class="comparison-item" style="flex: 1; text-align: center;">
-                        <h4 style="margin-bottom: 0.5rem; color: #1976d2;">입주 시</h4>
-                        <img src="${originalPhotoPath}" alt="입주 사진" style="width: 100%; max-width: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    </div>
-                    <div class="comparison-item" style="flex: 1; text-align: center;">
-                        <h4 style="margin-bottom: 0.5rem; color: #28a745;">퇴거 시 (지금 촬영)</h4>
-                        <img id="captured-${type}-${index}" alt="촬영된 사진" style="width: 100%; max-width: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display:none;">
-                    </div>
-                </div>
-                <div style="text-align: center; margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center;">
-                    <button class="btn btn-success" onclick="savePhoto('${type}', ${index})" id="save-btn-${type}-${index}" style="display:none;">
-                        💾 저장하기
-                    </button>
-                    <button class="btn btn-warning" onclick="retakePhoto('${type}', ${index})">
-                        🔄 다시 촬영
-                    </button>
-                    <button class="btn btn-secondary" onclick="exitCameraMode('${type}', ${index}, '${originalPhotoPath}')">
-                        ✕ 취소
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        const video = container.querySelector('.overlay-video');
-        const overlayImage = container.querySelector('.overlay-image');
-        const overlayContainer = container.querySelector('.overlay-container');
-        
-        // 커스텀 비율인 경우 초기 설정 (나중에 실제 비디오 비율로 덮어씀)
-        if (ratioClass === 'custom-ratio') {
-            // 초기에는 목표 비율로 설정하지만, 비디오 로드 후 실제 비율로 변경됨
-            overlayContainer.style.aspectRatio = `${imageInfo.aspectRatio}`;
-            
-            // 세로 비율인 경우 최대 너비 제한
-            if (imageInfo.aspectRatio < 1) {
-                overlayContainer.style.maxWidth = '300px';
-            } else {
-                overlayContainer.style.maxWidth = '400px';
-            }
-            
-            console.log(`초기 커스텀 비율 설정: ${imageInfo.aspectRatio} (비디오 로드 후 실제 비율로 변경됨)`);
-        }
-        
-        video.srcObject = currentStream;
-        
-        // 오버레이 이미지 로드 확인 및 초기 투명도 설정
-        if (overlayImage) {
-            overlayImage.onload = function() {
-                console.log('오버레이 이미지 로드 완료');
-                // 초기 투명도 50% 설정
-                overlayImage.style.opacity = '0.5';
-            };
-            
-            // 이미 로드된 경우
-            if (overlayImage.complete) {
-                overlayImage.style.opacity = '0.5';
-                console.log('오버레이 이미지 이미 로드됨');
-            }
-        }
-        
-        // 카메라 스트림 정보 모니터링
-        video.onloadedmetadata = function() {
-            const actualRatio = video.videoWidth / video.videoHeight;
-            console.log(`실제 카메라 해상도: ${video.videoWidth}x${video.videoHeight}, 비율: ${actualRatio.toFixed(3)}`);
-            console.log(`목표 비율: ${imageInfo.aspectRatio.toFixed(3)}, 차이: ${Math.abs(actualRatio - imageInfo.aspectRatio).toFixed(3)}`);
-            
-            // 비율 차이가 큰 경우 사용자에게 알림
-            const ratioDifference = Math.abs(actualRatio - imageInfo.aspectRatio);
-            if (ratioDifference > 0.1) {
-                console.warn(`비율 차이가 큽니다. 목표: ${imageInfo.aspectRatio.toFixed(3)}, 실제: ${actualRatio.toFixed(3)}`);
-            }
-            
-            // 컨테이너를 목표 비율에 맞춰 조정
-            adjustContainerToTargetRatio(overlayContainer, actualRatio, imageInfo.aspectRatio);
-            
-            // 비디오 요소의 표시 크기를 목표 비율에 맞춰 조정
-            adjustVideoDisplaySize(video, overlayContainer, imageInfo.aspectRatio, actualRatio);
-        };
-        
-    } catch (error) {
-        console.error('카메라 접근 오류:', error);
-        
-        let errorMessage = '카메라에 접근할 수 없습니다.\n\n';
-        
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            if (isIOS) {
-                // iOS 사용자 안내 표시
-                showIOSGuide();
-                errorMessage += 'iPhone Safari에서 카메라 권한이 거부되었습니다.\n\n';
-                errorMessage += '위쪽의 안내를 참고하여 카메라 권한을 허용해주세요.';
-            } else {
-                errorMessage += '카메라 권한이 거부되었습니다.\n\n';
-                errorMessage += '브라우저 주소창 근처의 카메라 아이콘을 클릭하여\n';
-                errorMessage += '카메라 권한을 허용해주세요.';
-            }
-        } else if (error.name === 'NotFoundError') {
-            errorMessage += '카메라를 찾을 수 없습니다. 기기에 카메라가 있는지 확인해주세요.';
-        } else if (error.name === 'NotSupportedError') {
-            errorMessage += '브라우저에서 카메라 API를 지원하지 않습니다.';
-        } else if (error.name === 'NotReadableError') {
-            errorMessage += '다른 앱에서 카메라를 사용 중입니다. 다른 앱을 종료 후 다시 시도해주세요.';
-        } else {
-            errorMessage += '오류: ' + error.message;
-        }
-        
-        container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #dc3545; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px;">
-                <h3 style="color: #721c24; margin-bottom: 1rem;">📷 카메라 접근 오류</h3>
-                <pre style="white-space: pre-wrap; text-align: left; font-size: 0.9rem; line-height: 1.4;">${errorMessage}</pre>
-                <button class="btn btn-primary" onclick="startCamera('${type}', ${index}, '${originalPhotoPath}')" style="margin-top: 1rem;">
-                    다시 시도
-                </button>
-            </div>
-        `;
-    }
-}
-
-function adjustOverlay(type, index, opacity) {
-    const container = document.getElementById(`camera-container-${type}-${index}`);
-    const overlayImage = container.querySelector('.overlay-image');
-    const valueDisplay = document.getElementById(`opacity-value-${type}-${index}`);
-    
-    if (overlayImage) {
-        overlayImage.style.opacity = opacity / 100;
-        console.log(`오버레이 투명도 변경: ${opacity}% (${opacity / 100})`);
-    }
-    
-    if (valueDisplay) {
-        valueDisplay.textContent = opacity;
-    }
-}
-
-async function capturePhoto(type, index) {
-    const container = document.getElementById(`camera-container-${type}-${index}`);
-    const video = container.querySelector('.overlay-video');
-    const canvas = container.querySelector(`#canvas-${type}-${index}`);
-    const context = canvas.getContext('2d');
-    
-    console.log('사진 캡처 시작 - 비디오 크기:', video.videoWidth, 'x', video.videoHeight);
-    console.log('목표 비율:', currentImageInfo ? currentImageInfo.aspectRatio.toFixed(3) : '정보 없음');
-    
-    // 목표 비율에 맞는 캔버스 크기 계산
-    let canvasWidth = video.videoWidth;
-    let canvasHeight = video.videoHeight;
-    let sourceX = 0;
-    let sourceY = 0;
-    let sourceWidth = video.videoWidth;
-    let sourceHeight = video.videoHeight;
-    
-    if (currentImageInfo) {
-        const videoRatio = video.videoWidth / video.videoHeight;
-        const targetRatio = currentImageInfo.aspectRatio;
-        
-        console.log(`비디오 비율: ${videoRatio.toFixed(3)}, 목표 비율: ${targetRatio.toFixed(3)}`);
-        
-        if (Math.abs(videoRatio - targetRatio) > 0.05) {
-            if (videoRatio > targetRatio) {
-                // 비디오가 더 가로로 넓음 - 좌우 크롭
-                sourceWidth = Math.round(video.videoHeight * targetRatio);
-                sourceX = Math.round((video.videoWidth - sourceWidth) / 2);
-                canvasWidth = sourceWidth;
-                canvasHeight = video.videoHeight;
-                console.log(`가로 크롭: ${sourceX}, 0, ${sourceWidth}, ${sourceHeight}`);
-            } else {
-                // 비디오가 더 세로로 김 - 상하 크롭
-                sourceHeight = Math.round(video.videoWidth / targetRatio);
-                sourceY = Math.round((video.videoHeight - sourceHeight) / 2);
-                canvasWidth = video.videoWidth;
-                canvasHeight = sourceHeight;
-                console.log(`세로 크롭: 0, ${sourceY}, ${sourceWidth}, ${sourceHeight}`);
-            }
-        }
-    }
-    
-    // 캔버스 크기를 목표 크기로 설정
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-    
-    // 크롭된 비디오 프레임을 캔버스에 그리기
-    context.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvasWidth, canvasHeight);
-    
-    console.log(`최종 캔버스 크기: ${canvasWidth}x${canvasHeight}, 비율: ${(canvasWidth/canvasHeight).toFixed(3)}`);
-    
-    // 모바일 기기에서 회전 보정 적용
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if (isMobile) {
-        // 비디오 트랙에서 설정 정보 확인
-        const videoTrack = currentStream ? currentStream.getVideoTracks()[0] : null;
-        let videoSettings = null;
-        if (videoTrack && videoTrack.getSettings) {
-            videoSettings = videoTrack.getSettings();
-            console.log('비디오 설정:', videoSettings);
-        }
-        
-        // 기기 방향에 따른 회전 보정
-        const orientation = screen.orientation ? screen.orientation.angle : window.orientation;
-        console.log('기기 방향:', orientation, '캔버스 크기:', canvasWidth, 'x', canvasHeight);
-        
-        // 세로 촬영 감지 (목표 비율 기준)
-        const isTargetPortrait = currentImageInfo ? currentImageInfo.isPortrait : (canvasHeight > canvasWidth);
-        const isCurrentPortrait = canvasHeight > canvasWidth;
-        const needsRotation = isTargetPortrait !== isCurrentPortrait;
-        
-        if (needsRotation || (orientation !== undefined && orientation !== 0)) {
-            // 기기가 회전된 경우 보정
-            let correctionAngle = 0;
-            
-            if (needsRotation) {
-                // 목표 비율과 현재 비율이 다른 경우 90도 회전 필요
-                correctionAngle = isTargetPortrait ? Math.PI / 2 : -Math.PI / 2;
-                console.log(`비율 불일치 감지 - ${isTargetPortrait ? '세로' : '가로'} 방향으로 90도 회전 보정 적용`);
-            } else {
-                switch (orientation) {
-                    case 90:  // 시계방향 90도
-                        correctionAngle = -Math.PI / 2;
-                        break;
-                    case -90: // 반시계방향 90도
-                    case 270:
-                        correctionAngle = Math.PI / 2;
-                        break;
-                    case 180: // 180도
-                        correctionAngle = Math.PI;
-                        break;
-                }
-            }
-            
-            if (correctionAngle !== 0) {
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-                
-                if (Math.abs(correctionAngle) === Math.PI / 2) {
-                    // 90도 회전인 경우 캔버스 크기 바꿈
-                    tempCanvas.width = canvasHeight;
-                    tempCanvas.height = canvasWidth;
-                    tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
-                    tempCtx.rotate(correctionAngle);
-                    tempCtx.drawImage(canvas, -canvasWidth / 2, -canvasHeight / 2);
-                    
-                    console.log(`90도 회전 후 크기: ${tempCanvas.width}x${tempCanvas.height}`);
-                } else {
-                    // 180도 회전인 경우
-                    tempCanvas.width = canvasWidth;
-                    tempCanvas.height = canvasHeight;
-                    tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
-                    tempCtx.rotate(correctionAngle);
-                    tempCtx.drawImage(canvas, -canvasWidth / 2, -canvasHeight / 2);
-                }
-                
-                // 보정된 이미지를 원본 캔버스에 복사
-                canvas.width = tempCanvas.width;
-                canvas.height = tempCanvas.height;
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.drawImage(tempCanvas, 0, 0);
-                
-                console.log(`최종 이미지 크기: ${canvas.width}x${canvas.height}, 비율: ${(canvas.width/canvas.height).toFixed(3)}`);
-            }
-        }
-    }
-    
-    // 캔버스에서 이미지 데이터 추출 (config.inc에서 설정된 품질)
-    const imageData = canvas.toDataURL('image/jpeg', CAMERA_CONFIG.jpegQuality);
-    capturedPhotos[`${type}-${index}`] = imageData;
-    
-    // 촬영된 사진 표시
-    const capturedImg = document.getElementById(`captured-${type}-${index}`);
-    capturedImg.src = imageData;
-    capturedImg.style.display = 'block';
-    
-    // 비교 컨테이너 표시
-    const comparisonContainer = document.getElementById(`comparison-${type}-${index}`);
-    comparisonContainer.style.display = 'block';
-    
-    // 저장 버튼 표시
-    const saveBtn = document.getElementById(`save-btn-${type}-${index}`);
-    saveBtn.style.display = 'inline-block';
-    
-    // 촬영 창 숨기기 - 오버레이 컨테이너, 카메라 컨트롤, 헤더 숨기기
-    const overlayContainer = container.querySelector('.overlay-container');
-    const cameraControls = container.querySelector('.camera-controls');
-    const photoHeader = container.parentElement.querySelector('.photo-header');
-    if (overlayContainer) {
-        overlayContainer.style.display = 'none';
-    }
-    if (cameraControls) {
-        cameraControls.style.display = 'none';
-    }
-    if (photoHeader) {
-        photoHeader.style.display = 'none';
-    }
-    
-    // 카메라 정지
-    stopCamera(type, index);
-}
-
-function stopCamera(type, index) {
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        currentStream = null;
-    }
-}
-
-function retakePhoto(type, index) {
-    // 비교 컨테이너 숨기기
-    const comparisonContainer = document.getElementById(`comparison-${type}-${index}`);
-    comparisonContainer.style.display = 'none';
-    
-    // 촬영된 사진 데이터 삭제
-    delete capturedPhotos[`${type}-${index}`];
-    
-    // 카메라 다시 시작
-    const container = document.getElementById(`camera-container-${type}-${index}`);
-    const originalImg = container.querySelector('.overlay-image');
-    if (originalImg) {
-        // 이미지 정보 초기화
-        currentImageInfo = null;
-        startCamera(type, index, originalImg.src);
-    }
-}
-
-function savePhoto(type, index) {
-    const photoData = capturedPhotos[`${type}-${index}`];
-    if (!photoData) {
-        alert('저장할 사진이 없습니다.');
-        return;
-    }
-    
-    // 서버에 사진 저장 로직 구현
-    const formData = new FormData();
-    formData.append('contract_id', '<?php echo $contract_id; ?>');
-    formData.append('photo_id', '<?php echo $photo_id; ?>');
-    formData.append('type', type);
-    formData.append('index', index);
-    formData.append('photo_data', photoData);
-    
-    fetch('save_moveout_photo.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('사진이 저장되었습니다.');
-            // 페이지 새로고침하여 처음 로딩 상태로 복원
-            location.reload();
-        } else {
-            alert('저장 실패: ' + (data.message || '알 수 없는 오류'));
-        }
-    })
-    .catch(error => {
-        console.error('저장 오류:', error);
-        alert('저장 중 오류가 발생했습니다.');
-    });
-}
-
-// 페이지 언로드 시 카메라 스트림 정지
-window.addEventListener('beforeunload', function() {
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
+        }, 1000);
     }
 });
 </script>

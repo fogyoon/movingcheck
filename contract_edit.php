@@ -1,6 +1,14 @@
 <?php
 require_once 'sql.inc';
 
+// 전화번호 필드들을 조합하여 하이픈 형식으로 변환하는 함수
+function formatPhoneNumberFromFields($field1, $field2, $field3) {
+    $field1 = trim($field1);
+    $field2 = trim($field2);
+    $field3 = trim($field3);
+    return $field1 . '-' . $field2 . '-' . $field3;
+}
+
 // 로그인 확인 - 로그인되지 않은 경우 login.php로 리다이렉트
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -60,9 +68,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'landlord_name' => ['type' => 'string', 'required' => false, 'max_length' => 50],
         'tenant_name' => ['type' => 'string', 'required' => false, 'max_length' => 50],
         'agent_name' => ['type' => 'string', 'required' => false, 'max_length' => 50],
-        'landlord_phone' => ['type' => 'phone', 'required' => false],
-        'tenant_phone' => ['type' => 'phone', 'required' => false],
-        'agent_phone' => ['type' => 'phone', 'required' => false],
+        'landlord_phone_1' => ['type' => 'string', 'required' => false],
+        'landlord_phone_2' => ['type' => 'string', 'required' => false],
+        'landlord_phone_3' => ['type' => 'string', 'required' => false],
+        'tenant_phone_1' => ['type' => 'string', 'required' => false],
+        'tenant_phone_2' => ['type' => 'string', 'required' => false],
+        'tenant_phone_3' => ['type' => 'string', 'required' => false],
+        'agent_phone_1' => ['type' => 'string', 'required' => false],
+        'agent_phone_2' => ['type' => 'string', 'required' => false],
+        'agent_phone_3' => ['type' => 'string', 'required' => false],
         'start_date' => ['type' => 'date', 'required' => true],
         'end_date' => ['type' => 'date', 'required' => true],
         'deposit' => ['type' => 'int', 'required' => true],
@@ -79,9 +93,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $landlord_name = $validation['data']['landlord_name'];
         $tenant_name = $validation['data']['tenant_name'];
         $agent_name = $validation['data']['agent_name'];
-        $landlord_phone = $validation['data']['landlord_phone'];
-        $tenant_phone = $validation['data']['tenant_phone'];
-        $agent_phone = $validation['data']['agent_phone'];
+        
+        // 전화번호 필드들을 조합하여 하이픈 형식으로 저장
+        $landlord_phone = formatPhoneNumberFromFields($validation['data']['landlord_phone_1'] ?? '', $validation['data']['landlord_phone_2'] ?? '', $validation['data']['landlord_phone_3'] ?? '');
+        $tenant_phone = formatPhoneNumberFromFields($validation['data']['tenant_phone_1'] ?? '', $validation['data']['tenant_phone_2'] ?? '', $validation['data']['tenant_phone_3'] ?? '');
+        $agent_phone = formatPhoneNumberFromFields($validation['data']['agent_phone_1'] ?? '', $validation['data']['agent_phone_2'] ?? '', $validation['data']['agent_phone_3'] ?? '');
+        
         $start_date = $validation['data']['start_date'];
         $end_date = $validation['data']['end_date'];
         $deposit = $validation['data']['deposit'];
@@ -222,7 +239,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             
-            log_user_activity($user_id, 'update_contract', '계약 수정 (ID: ' . $contract_id . ')', $contract_id);
+            log_user_activity($user_id, 'update_contract', '계약 수정 (ID: ' . $contract_id . ')', $contract_id, $property_id);
             $message = '계약이 성공적으로 수정되었습니다.';
         } else {
             // 새 계약 등록
@@ -269,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             
-            log_user_activity($user_id, 'create_contract', '새 계약 등록 (ID: ' . $contract_id . ')', $contract_id);
+            log_user_activity($user_id, 'create_contract', '새 계약 등록 (ID: ' . $contract_id . ')', $contract_id, $property_id);
             $message = '계약이 성공적으로 등록되었습니다.';
         }
         
@@ -608,6 +625,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .form-input:required:valid {
       border-color: #28a745;
     }
+    
+    /* 전화번호 입력 필드 유효성 검사 스타일 */
+    .phone-input:required:invalid {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1) !important;
+    }
+    
+    .phone-input:required:valid {
+      border-color: #28a745 !important;
+      box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1) !important;
+    }
+    
+    .phone-input.invalid {
+      border-color: #dc3545 !important;
+      box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1) !important;
+    }
+    
+    .phone-input.valid {
+      border-color: #28a745 !important;
+      box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1) !important;
+    }
+    
+    /* 전화번호 입력 그룹 스타일 */
+    .phone-input-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    
+    .phone-input {
+      flex: 1;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      text-align: center;
+      background: #fff;
+      transition: border-color 0.2s;
+    }
+    
+    .phone-input:focus {
+      outline: none;
+      border-color: #0064FF;
+      box-shadow: 0 0 0 2px rgba(0, 100, 255, 0.1);
+    }
+    
+    .phone-separator {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #666;
+      user-select: none;
+    }
+    
+    /* 모바일에서 전화번호 입력 최적화 */
+    @media (max-width: 768px) {
+      .phone-input-group {
+        gap: 0.2rem;
+        width: 100%;
+        flex-wrap: nowrap;
+      }
+      
+      .phone-input {
+        padding: 0.5rem 0.3rem;
+        font-size: 16px; /* 줌 방지 */
+        min-width: 0;
+        flex: 1;
+        text-align: center;
+      }
+      
+      .phone-separator {
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        padding: 0 0.1rem;
+      }
+    }
+    
+    /* 작은 화면에서 추가 최적화 */
+    @media (max-width: 480px) {
+      .phone-input-group {
+        gap: 0.1rem;
+      }
+      
+      .phone-input {
+        padding: 0.4rem 0.2rem;
+        font-size: 14px;
+      }
+      
+      .phone-separator {
+        font-size: 0.8rem;
+        padding: 0 0.05rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -637,7 +747,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="file-upload-icon">📄</div>
             <div class="file-upload-text">계약서 사진을 업로드하세요</div>
             <div class="file-upload-hint">JPG, PNG, PDF 파일 지원 (최대 10MB)</div>
-            <input type="file" name="contract_file" id="contractFile" accept="image/*,.pdf" style="display: none;">
+            <input type="file" name="contract_file" id="contractFile" accept="image/*,android/force-camera-workaround,.pdf" style="display: none;">
           </div>
         </div>
       </div>
@@ -680,10 +790,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           
           <div class="form-group">
             <label class="form-label required" for="landlord_phone">임대인 전화번호</label>
-            <input type="text" class="form-input" name="landlord_phone" id="landlord_phone" 
-                   value="<?php echo $contract ? htmlspecialchars($contract['landlord_phone'] ?? '') : ''; ?>"
-                   placeholder="010-1234-5678" pattern="[0-9\-\s]*" inputmode="text" required>
-            <div class="form-help">임대인 연락처를 입력하세요</div>
+            <div class="phone-input-group">
+              <input type="text" class="phone-input" name="landlord_phone_1" id="landlord_phone_1" maxlength="3" inputmode="numeric" required>
+              <span class="phone-separator">-</span>
+              <input type="text" class="phone-input" name="landlord_phone_2" id="landlord_phone_2" maxlength="4" inputmode="numeric" required>
+              <span class="phone-separator">-</span>
+              <input type="text" class="phone-input" name="landlord_phone_3" id="landlord_phone_3" maxlength="4" inputmode="numeric" required>
+              <input type="hidden" name="landlord_phone" id="landlord_phone" 
+                     value="<?php echo $contract ? htmlspecialchars($contract['landlord_phone'] ?? '') : ''; ?>" required>
+            </div>
           </div>
         </div>
 
@@ -698,10 +813,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           
           <div class="form-group">
             <label class="form-label required" for="tenant_phone">임차인 전화번호</label>
-            <input type="text" class="form-input" name="tenant_phone" id="tenant_phone" 
-                   value="<?php echo $contract ? htmlspecialchars($contract['tenant_phone'] ?? '') : ''; ?>"
-                   placeholder="010-1234-5678" pattern="[0-9\-\s]*" inputmode="text" required>
-            <div class="form-help">임차인 연락처를 입력하세요</div>
+            <div class="phone-input-group">
+              <input type="text" class="phone-input" name="tenant_phone_1" id="tenant_phone_1" maxlength="3" inputmode="numeric" required>
+              <span class="phone-separator">-</span>
+              <input type="text" class="phone-input" name="tenant_phone_2" id="tenant_phone_2" maxlength="4" inputmode="numeric" required>
+              <span class="phone-separator">-</span>
+              <input type="text" class="phone-input" name="tenant_phone_3" id="tenant_phone_3" maxlength="4" inputmode="numeric" required>
+              <input type="hidden" name="tenant_phone" id="tenant_phone" 
+                     value="<?php echo $contract ? htmlspecialchars($contract['tenant_phone'] ?? '') : ''; ?>" required>
+            </div>
           </div>
         </div>
 
@@ -717,10 +837,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           <div class="form-group">
             <label class="form-label" for="agent_phone">중개사 전화번호</label>
-            <input type="text" class="form-input" name="agent_phone" id="agent_phone" 
-                   value="<?php echo $contract ? htmlspecialchars($contract['agent_phone'] ?? '') : ''; ?>"
-                   placeholder="010-1234-5678" pattern="[0-9\-\s]*" inputmode="text">
-            <div class="form-help">중개사 연락처를 입력하세요</div>
+            <div class="phone-input-group">
+              <input type="text" class="phone-input" name="agent_phone_1" id="agent_phone_1" maxlength="3" inputmode="numeric">
+              <span class="phone-separator">-</span>
+              <input type="text" class="phone-input" name="agent_phone_2" id="agent_phone_2" maxlength="4" inputmode="numeric">
+              <span class="phone-separator">-</span>
+              <input type="text" class="phone-input" name="agent_phone_3" id="agent_phone_3" maxlength="4" inputmode="numeric">
+              <input type="hidden" name="agent_phone" id="agent_phone" 
+                     value="<?php echo $contract ? htmlspecialchars($contract['agent_phone'] ?? '') : ''; ?>">
+            </div>
           </div>
         </div>
 
@@ -743,7 +868,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-label required" for="deposit">보증금 (원)</label>
             <input type="number" class="form-input amount-input" name="deposit" id="deposit" 
                    value="<?php echo $contract ? $contract['deposit'] : ''; ?>" 
-                   placeholder="0" min="0" step="100000" required>
+                   placeholder="0" min="0" inputmode="numeric" required>
             <div class="form-help">숫자만 입력 (예: 10000000)</div>
           </div>
           
@@ -751,7 +876,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-label required" for="monthly_rent">월세 (원)</label>
             <input type="number" class="form-input amount-input" name="monthly_rent" id="monthly_rent" 
                    value="<?php echo $contract ? $contract['monthly_rent'] : ''; ?>" 
-                   placeholder="0" min="0" step="10000" required>
+                   placeholder="0" min="0" inputmode="numeric" required>
             <div class="form-help">숫자만 입력 (예: 800000)</div>
           </div>
         </div>
@@ -819,6 +944,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         autoFilledFields.landlord_name = false;
       }
       if (autoFilledFields.landlord_phone && landlordPhone && landlordPhone.value === currentUser.phone) {
+        // 전화번호 필드들을 모두 지우기
+        const input1 = document.getElementById('landlord_phone_1');
+        const input2 = document.getElementById('landlord_phone_2');
+        const input3 = document.getElementById('landlord_phone_3');
+        if (input1 && input2 && input3) {
+          input1.value = '';
+          input2.value = '';
+          input3.value = '';
+        }
         landlordPhone.value = '';
         autoFilledFields.landlord_phone = false;
       }
@@ -827,6 +961,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         autoFilledFields.tenant_name = false;
       }
       if (autoFilledFields.tenant_phone && tenantPhone && tenantPhone.value === currentUser.phone) {
+        // 전화번호 필드들을 모두 지우기
+        const input1 = document.getElementById('tenant_phone_1');
+        const input2 = document.getElementById('tenant_phone_2');
+        const input3 = document.getElementById('tenant_phone_3');
+        if (input1 && input2 && input3) {
+          input1.value = '';
+          input2.value = '';
+          input3.value = '';
+        }
         tenantPhone.value = '';
         autoFilledFields.tenant_phone = false;
       }
@@ -835,6 +978,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         autoFilledFields.agent_name = false;
       }
       if (autoFilledFields.agent_phone && agentPhone && agentPhone.value === currentUser.phone) {
+        // 전화번호 필드들을 모두 지우기
+        const input1 = document.getElementById('agent_phone_1');
+        const input2 = document.getElementById('agent_phone_2');
+        const input3 = document.getElementById('agent_phone_3');
+        if (input1 && input2 && input3) {
+          input1.value = '';
+          input2.value = '';
+          input3.value = '';
+        }
         agentPhone.value = '';
         autoFilledFields.agent_phone = false;
       }
@@ -846,7 +998,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           autoFilledFields.landlord_name = true;
         }
         if (landlordPhone && !landlordPhone.value && currentUser.phone) {
-          landlordPhone.value = currentUser.phone;
+          // 전화번호를 분리해서 각 필드에 입력
+          const phoneParts = currentUser.phone.split('-');
+          if (phoneParts.length >= 3) {
+            const input1 = document.getElementById('landlord_phone_1');
+            const input2 = document.getElementById('landlord_phone_2');
+            const input3 = document.getElementById('landlord_phone_3');
+            if (input1 && input2 && input3) {
+              input1.value = phoneParts[0];
+              input2.value = phoneParts[1];
+              input3.value = phoneParts[2];
+              // hidden 필드 업데이트
+              landlordPhone.value = currentUser.phone;
+            }
+          }
           autoFilledFields.landlord_phone = true;
         }
       } else if (role === 'tenant') {
@@ -855,7 +1020,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           autoFilledFields.tenant_name = true;
         }
         if (tenantPhone && !tenantPhone.value && currentUser.phone) {
-          tenantPhone.value = currentUser.phone;
+          // 전화번호를 분리해서 각 필드에 입력
+          const phoneParts = currentUser.phone.split('-');
+          if (phoneParts.length >= 3) {
+            const input1 = document.getElementById('tenant_phone_1');
+            const input2 = document.getElementById('tenant_phone_2');
+            const input3 = document.getElementById('tenant_phone_3');
+            if (input1 && input2 && input3) {
+              input1.value = phoneParts[0];
+              input2.value = phoneParts[1];
+              input3.value = phoneParts[2];
+              // hidden 필드 업데이트
+              tenantPhone.value = currentUser.phone;
+            }
+          }
           autoFilledFields.tenant_phone = true;
         }
       } else if (role === 'agent') {
@@ -864,7 +1042,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           autoFilledFields.agent_name = true;
         }
         if (agentPhone && !agentPhone.value && currentUser.phone) {
-          agentPhone.value = currentUser.phone;
+          // 전화번호를 분리해서 각 필드에 입력
+          const phoneParts = currentUser.phone.split('-');
+          if (phoneParts.length >= 3) {
+            const input1 = document.getElementById('agent_phone_1');
+            const input2 = document.getElementById('agent_phone_2');
+            const input3 = document.getElementById('agent_phone_3');
+            if (input1 && input2 && input3) {
+              input1.value = phoneParts[0];
+              input2.value = phoneParts[1];
+              input3.value = phoneParts[2];
+              // hidden 필드 업데이트
+              agentPhone.value = currentUser.phone;
+            }
+          }
           autoFilledFields.agent_phone = true;
         }
       }
@@ -1054,6 +1245,151 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
     });
 
+    // 전화번호 입력 필드 초기화 및 이벤트 설정
+    function initializePhoneInputs() {
+      const phoneFields = ['landlord_phone', 'tenant_phone', 'agent_phone'];
+      
+      phoneFields.forEach(fieldName => {
+        const hiddenInput = document.getElementById(fieldName);
+        const input1 = document.getElementById(fieldName + '_1');
+        const input2 = document.getElementById(fieldName + '_2');
+        const input3 = document.getElementById(fieldName + '_3');
+        
+        if (hiddenInput && input1 && input2 && input3) {
+          // 기존 값이 있으면 분리해서 표시
+          if (hiddenInput.value) {
+            const parts = hiddenInput.value.split('-');
+            if (parts.length >= 3) {
+              input1.value = parts[0];
+              input2.value = parts[1];
+              input3.value = parts[2];
+            }
+          }
+          
+          // 입력 이벤트 설정
+          [input1, input2, input3].forEach((input, index) => {
+            input.addEventListener('input', function(e) {
+              // 숫자만 입력 허용
+              this.value = this.value.replace(/[^0-9]/g, '');
+              
+              // 다음 필드로 자동 이동
+              if (index === 0) {
+                // 첫 번째 필드 (국번)
+                const areaCode = this.value;
+                
+                // 02가 입력되면 바로 두 번째 필드로 이동
+                if (areaCode === '02') {
+                  input2.focus();
+                }
+                // 최대 길이에 도달하면 두 번째 필드로 이동
+                else if (this.value.length >= this.maxLength) {
+                  input2.focus();
+                }
+                
+                // 국번이 변경되면 두 번째 필드의 maxlength 조정
+                if (areaCode === '02') {
+                  input2.maxLength = 4; // 서울도 4자리까지 허용
+                } else {
+                  input2.maxLength = 4;
+                }
+              } else if (index === 1) {
+                // 두 번째 필드 (중간 번호)
+                const areaCode = input1.value;
+                const currentLength = this.value.length;
+                
+                // 010인 경우 4자리가 채워졌을 때만 세 번째 필드로 이동
+                if (areaCode === '010' && currentLength >= 4) {
+                  input3.focus();
+                }
+                // 다른 지역번호의 경우 3자리 또는 4자리에서 이동
+                else if (areaCode !== '010') {
+                  if (currentLength >= 4) {
+                    input3.focus();
+                  } else if (currentLength === 3) {
+                    setTimeout(() => {
+                      if (this.value.length === 3 && document.activeElement === this) {
+                        input3.focus();
+                      }
+                    }, 1000);
+                  }
+                }
+              }
+              
+              // hidden 필드 업데이트
+              updateHiddenPhoneField(fieldName, input1, input2, input3);
+              
+              // 실시간 유효성 검사 및 시각적 피드백
+              validatePhoneField(fieldName, input1, input2, input3);
+            });
+            
+            // 백스페이스로 이전 필드로 이동
+            input.addEventListener('keydown', function(e) {
+              if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                const prevInput = [input1, input2, input3][index - 1];
+                prevInput.focus();
+              }
+            });
+          });
+        }
+      });
+    }
+    
+    // hidden 전화번호 필드 업데이트
+    function updateHiddenPhoneField(fieldName, input1, input2, input3) {
+      const hiddenInput = document.getElementById(fieldName);
+      const value1 = input1.value.trim();
+      const value2 = input2.value.trim();
+      const value3 = input3.value.trim();
+      
+      if (value1 || value2 || value3) {
+        hiddenInput.value = `${value1}-${value2}-${value3}`;
+      } else {
+        hiddenInput.value = '';
+      }
+    }
+    
+    // 전화번호 필드 유효성 검사 및 시각적 피드백
+    function validatePhoneField(fieldName, input1, input2, input3) {
+      const value1 = input1.value.trim();
+      const value2 = input2.value.trim();
+      const value3 = input3.value.trim();
+      
+      // 필수 전화번호 필드인지 확인 (중개사는 선택사항)
+      const isRequired = fieldName !== 'agent_phone';
+      
+      if (isRequired) {
+        const isValid = value1 && value2 && value3;
+        
+        // 모든 입력 필드에 유효성 클래스 적용
+        [input1, input2, input3].forEach(input => {
+          if (isValid) {
+            input.classList.remove('invalid');
+            input.classList.add('valid');
+          } else {
+            input.classList.remove('valid');
+            input.classList.add('invalid');
+          }
+        });
+      }
+    }
+    
+    // 페이지 로드 시 전화번호 입력 필드 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      initializePhoneInputs();
+      
+      // 기존 값에 대한 유효성 검사 실행
+      const phoneFields = ['landlord_phone', 'tenant_phone', 'agent_phone'];
+      phoneFields.forEach(fieldName => {
+        const input1 = document.getElementById(fieldName + '_1');
+        const input2 = document.getElementById(fieldName + '_2');
+        const input3 = document.getElementById(fieldName + '_3');
+        
+        if (input1 && input2 && input3) {
+          validatePhoneField(fieldName, input1, input2, input3);
+        }
+      });
+    });
+    
     // 폼 제출 시 필수 항목 검증
     document.querySelector('.contract-form').addEventListener('submit', function(e) {
       const landlordName = document.getElementById('landlord_name').value.trim();
@@ -1078,15 +1414,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hasError = true;
       }
       
-      if (!landlordPhone) {
+      // 전화번호 필드 검증 (HTML required 속성으로 기본 검증 처리)
+      const landlordPhone1 = document.getElementById('landlord_phone_1').value.trim();
+      const landlordPhone2 = document.getElementById('landlord_phone_2').value.trim();
+      const landlordPhone3 = document.getElementById('landlord_phone_3').value.trim();
+      const tenantPhone1 = document.getElementById('tenant_phone_1').value.trim();
+      const tenantPhone2 = document.getElementById('tenant_phone_2').value.trim();
+      const tenantPhone3 = document.getElementById('tenant_phone_3').value.trim();
+      
+      if (!landlordPhone1 || !landlordPhone2 || !landlordPhone3) {
         errorMessage += '• 임대인 전화번호를 입력해주세요.\n';
         hasError = true;
       }
       
-      if (!tenantPhone) {
+      if (!tenantPhone1 || !tenantPhone2 || !tenantPhone3) {
         errorMessage += '• 임차인 전화번호를 입력해주세요.\n';
         hasError = true;
       }
+      
+
       
       if (!startDate) {
         errorMessage += '• 계약 시작일을 입력해주세요.\n';

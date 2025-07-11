@@ -483,7 +483,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // 활동 로그 기록
                 $action_desc = $existing_photo ? '사진 수정' : '사진 업로드';
-                log_user_activity($user_id, 'upload_photo', $action_desc . ' (부위: ' . $part . ', 계약 ID: ' . $contract_id . ')', $contract_id);
+                log_user_activity($user_id, 'upload_photo', $action_desc . ' (부위: ' . $part . ', 계약 ID: ' . $contract_id . ')', $contract_id, $contract['property_id']);
                 
                 // 나머지는 상태 유지
                 header('Location: photo_list.php?contract_id=' . $contract_id);
@@ -584,13 +584,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <textarea name="description" class="edit-textarea" rows="2" placeholder="특이사항, 상태 등"><?php echo htmlspecialchars($existing_photo['description'] ?? ''); ?></textarea>
       </div>
 
-      <div class="desc">위치확인용(전체) 사진 1장, 세부(근접) 사진 1~5장 업로드</div>
+      <!-- <div class="desc">위치 확인용(전체) 사진 1장, 세부(근접) 사진 1~5장 업로드</div> -->
+
       <div class="edit-form-group">
-        <label class="edit-label">위치확인용(전체) 사진 <span style="color:#d32f2f;">*</span></label>
+        <label class="edit-label">위치 확인용(전체) 사진 <span style="color:#d32f2f;">*</span></label>
+        <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.8rem; line-height: 1.4; padding: 0.8rem; background-color: #f8f9fa; border-radius: 6px; border-left: 3px solid #0064FF;">
+          위치 확인 사진은 세부 사진이 촬영된 부위의 전체적인 위치를 파악하기 위한 사진입니다. 촬영하려는 부위의 위치를 알 수 있게 뒤로 물러나 전체적인 사진을 촬영하세요.
+        </div>
         <div class="file-upload-area" id="overviewUploadArea" style="margin-bottom:1rem;">
           <div class="file-upload-text" id="overviewUploadText">사진을 선택하거나 촬영하세요</div>
-          <div class="file-upload-hint">JPG, PNG 파일 지원 (최대 1장, 5MB)</div>
-          <input type="file" name="overview" id="overviewInput" accept="image/*" style="display:none;">
+          <div class="file-upload-hint">JPG, PNG 파일 지원 (최대 1장)</div>
+          <input type="file" name="overview" id="overviewInput" accept="image/*,android/force-camera-workaround" style="display:none;">
           <div class="thumb-list" id="overviewThumbList">
             <div class="thumb-placeholder" id="overviewPlaceholder">+</div>
           </div>
@@ -598,10 +602,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="edit-form-group">
         <label class="edit-label">세부(근접) 사진 (최대 5장) <span style="color:#d32f2f;">*</span></label>
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem; color: #856404;">
+          <div style="font-weight: 600; margin-bottom: 0.5rem;">📷 촬영 시 주의사항</div>
+          <div style="font-size: 0.95rem; line-height: 1.4;">
+            • 사진은 <strong>1배 줌</strong>으로 촬영해주세요.<br>
+            • 광각이나 망원으로 촬영하면 퇴거 시 사진 비교가 어려울 수 있습니다.
+          </div>
+        </div>
         <div class="file-upload-area" id="closeupUploadArea">
           <div class="file-upload-text" id="closeupUploadText">사진을 선택하거나 촬영하세요 (여러장 가능)</div>
-          <div class="file-upload-hint">JPG, PNG 파일 지원 (최대 5장, 각 5MB)</div>
-          <input type="file" name="closeup[]" id="closeupInput" accept="image/*" multiple style="display:none;">
+          <div class="file-upload-hint">JPG, PNG 파일 지원 (최대 5장)</div>
+          <input type="file" name="closeup[]" id="closeupInput" accept="image/*,android/force-camera-workaround" multiple style="display:none;">
           <div class="thumb-list" id="closeupThumbList">
             <div class="thumb-placeholder" id="closeupPlaceholder">+</div>
           </div>
@@ -829,7 +840,7 @@ function updateCloseupText() {
 
 // 이벤트 리스너 설정
 overviewArea.addEventListener('click', () => {
-  // 위치확인용 사진 제한 체크 (최대 1장)
+  // 위치 확인용 사진 제한 체크 (최대 1장)
   <?php if ($existing_photo): ?>
   const hasExistingOverview = existingOverviewPhoto && !removedExistingPhotos.includes(existingOverviewPhoto.path);
   const hasNewOverview = overviewInput.files && overviewInput.files.length > 0;
@@ -856,7 +867,7 @@ overviewArea.addEventListener('dragleave', () => overviewArea.classList.remove('
 overviewArea.addEventListener('drop', e => {
   e.preventDefault(); overviewArea.classList.remove('dragover');
   
-  // 위치확인용 사진 제한 체크 (최대 1장)
+  // 위치 확인용 사진 제한 체크 (최대 1장)
   <?php if ($existing_photo): ?>
   const hasExistingOverview = existingOverviewPhoto && !removedExistingPhotos.includes(existingOverviewPhoto.path);
   const hasNewOverview = overviewInput.files && overviewInput.files.length > 0;
@@ -975,7 +986,7 @@ photoForm.addEventListener('submit', function(e) {
   const hasNewCloseup = closeupFiles.length > 0;
   
   if (!hasExistingOverview && !hasNewOverview) {
-    alert('위치확인용(전체) 사진을 1장 등록해야 합니다.');
+    alert('위치 확인용(전체) 사진을 1장 등록해야 합니다.');
     e.preventDefault();
     return false;
   }
@@ -987,7 +998,7 @@ photoForm.addEventListener('submit', function(e) {
   <?php else: ?>
   // 새 사진 등록인 경우: 반드시 새 사진 필요
   if (!overviewInput.files || overviewInput.files.length === 0) {
-    alert('위치확인용(전체) 사진을 1장 등록해야 합니다.');
+    alert('위치 확인용(전체) 사진을 1장 등록해야 합니다.');
     e.preventDefault();
     return false;
   }

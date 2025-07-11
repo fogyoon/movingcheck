@@ -17,6 +17,7 @@ $offset = ($current_page - 1) * $records_per_page;
 $filters = [
     'user_id' => safe_int($_GET['user_id'] ?? '', 0),
     'contract_id' => safe_int($_GET['contract_id'] ?? '', 0),
+    'property_id' => safe_int($_GET['property_id'] ?? '', 0),
     'activity_type' => safe_string($_GET['activity_type'] ?? '', 50),
     'ip_address' => safe_string($_GET['ip_address'] ?? '', 45),
     'description' => safe_string($_GET['description'] ?? '', 200),
@@ -74,6 +75,11 @@ function get_total_activities_count($filters) {
         if (!empty($filters['date_to'])) {
             $sql .= " AND DATE(ua.created_at) <= ?";
             $params[] = $filters['date_to'];
+        }
+
+        if (!empty($filters['property_id'])) {
+            $sql .= " AND ua.property_id = ?";
+            $params[] = $filters['property_id'];
         }
         
         $stmt = $pdo->prepare($sql);
@@ -143,6 +149,11 @@ function get_filtered_activities($filters, $offset, $limit) {
             $sql .= " AND DATE(ua.created_at) <= ?";
             $params[] = $filters['date_to'];
         }
+
+        if (!empty($filters['property_id'])) {
+            $sql .= " AND ua.property_id = ?";
+            $params[] = $filters['property_id'];
+        }
         
         $sql .= " ORDER BY ua.created_at DESC LIMIT ? OFFSET ?";
         $params[] = $limit;
@@ -205,8 +216,6 @@ $activity_types = [
     'upload_photo' => '사진 업로드',
     'delete_photo' => '사진 삭제',
     'create_signature' => '서명 생성',
-    'create_damage_report' => '손상 신고',
-    'update_damage_report' => '손상 신고 수정',
     'view_property' => '임대물 조회',
     'view_contract' => '계약 조회',
     'other' => '기타'
@@ -465,6 +474,11 @@ function build_pagination_url($page, $filters) {
                 <label class="filter-label">설명 검색</label>
                 <input type="text" name="description" placeholder="설명에서 검색..." value="<?php echo htmlspecialchars($filters['description']); ?>" class="filter-input">
             </div>
+
+            <div class="filter-group">
+                <label class="filter-label">임대물 ID</label>
+                <input type="number" name="property_id" class="filter-select" value="<?php echo htmlspecialchars($filters['property_id'] ?: ''); ?>" placeholder="ID">
+            </div>
             
             <div class="filter-group">
                 <label class="filter-label">시작 날짜</label>
@@ -554,6 +568,7 @@ function build_pagination_url($page, $filters) {
                         <th>시간</th>
                         <th>사용자</th>
                         <th>활동</th>
+                        <th>임대물 ID</th>
                         <th>계약 ID</th>
                         <th>설명</th>
                         <th>IP 주소</th>
@@ -576,6 +591,15 @@ function build_pagination_url($page, $filters) {
                                 <span class="activity-type <?php echo $activity['activity_type']; ?>">
                                     <?php echo $activity_types[$activity['activity_type']] ?? $activity['activity_type']; ?>
                                 </span>
+                            </td>
+                            <td>
+                                <?php if ($activity['property_id']): ?>
+                                    <a href="properties.php?id=<?php echo $activity['property_id']; ?>" style="color: #1976d2; text-decoration: none;">
+                                        #<?php echo $activity['property_id']; ?>
+                                    </a>
+                                <?php else: ?>
+                                    <span style="color: #999;">-</span>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <?php if ($activity['contract_id']): ?>
